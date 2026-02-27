@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sachin Malusare — Portfolio</title>
+  <meta name="description" content="Sachin Malusare — Web developer portfolio showcasing live demo projects." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <!-- ===== NAVIGATION ===== -->
+  <nav class="navbar">
+    <div class="container">
+      <a href="#" class="nav-logo">sachin<span>.</span></a>
+      <ul class="nav-links">
+        <li><a href="#about">About</a></li>
+        <li><a href="#skills">Skills</a></li>
+        <li><a href="#projects">Projects</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+      <button class="hamburger" aria-label="Toggle navigation">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ===== HERO ===== -->
+  <section class="hero" id="hero">
+    <div class="hero-bg"></div>
+    <div class="container">
+      <div class="hero-content">
+        <p class="hero-greeting">Hello, I'm</p>
+        <h1 class="hero-name">Sachin <span class="highlight">Malusare</span></h1>
+        <p class="hero-tagline">
+          A full-stack developer who builds clean, performant web experiences.
+          Check out my live demos below.
+        </p>
+        <a href="#projects" class="hero-cta">
+          View My Work
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
+        </a>
+      </div>
+    </div>
+    <div class="scroll-indicator">
+      <div class="mouse"></div>
+      <span>Scroll</span>
+    </div>
+  </section>
+
+  <!-- ===== ABOUT ===== -->
+  <section class="section" id="about">
+    <div class="container">
+      <h2 class="section-title fade-in">About Me</h2>
+      <p class="section-subtitle fade-in">A little bit about who I am and what I do.</p>
+
+      <div class="about-grid fade-in">
+        <div class="about-image-wrapper">
+          <div class="about-image-placeholder">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.5 20.25a8.25 8.25 0 0115 0" />
+            </svg>
+            <p>Your Photo</p>
+          </div>
+        </div>
+
+        <div class="about-card glass">
+          <p>
+            I'm a passionate web developer with experience building modern,
+            responsive web applications. I love turning complex problems into
+            simple, elegant solutions.
+          </p>
+          <p>
+            My work spans front-end interfaces, back-end APIs, and everything
+            in between. I'm always exploring new technologies and pushing
+            myself to deliver higher-quality work.
+          </p>
+          <p>
+            Below you'll find live, interactive demos of projects I've built.
+            Each one is a fully functional web application you can explore.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SKILLS ===== -->
+  <section class="section" id="skills" style="background: var(--bg-secondary);">
+    <div class="container">
+      <h2 class="section-title fade-in">Skills</h2>
+      <p class="section-subtitle fade-in">Technologies and tools I work with.</p>
+
+      <div class="skills-grid">
+        <div class="skill-category glass fade-in">
+          <h3>Frontend</h3>
+          <div class="skill-tags">
+            <span class="skill-tag">HTML5</span>
+            <span class="skill-tag">CSS3</span>
+            <span class="skill-tag">JavaScript</span>
+            <span class="skill-tag">TypeScript</span>
+            <span class="skill-tag">React</span>
+            <span class="skill-tag">Vue.js</span>
+            <span class="skill-tag">Tailwind CSS</span>
+          </div>
+        </div>
+
+        <div class="skill-category glass fade-in">
+          <h3>Backend</h3>
+          <div class="skill-tags">
+            <span class="skill-tag">Node.js</span>
+            <span class="skill-tag">Express</span>
+            <span class="skill-tag">Python</span>
+            <span class="skill-tag">Django</span>
+            <span class="skill-tag">REST APIs</span>
+            <span class="skill-tag">GraphQL</span>
+          </div>
+        </div>
+
+        <div class="skill-category glass fade-in">
+          <h3>Databases</h3>
+          <div class="skill-tags">
+            <span class="skill-tag">PostgreSQL</span>
+            <span class="skill-tag">MongoDB</span>
+            <span class="skill-tag">Redis</span>
+            <span class="skill-tag">Firebase</span>
+          </div>
+        </div>
+
+        <div class="skill-category glass fade-in">
+          <h3>Tools & DevOps</h3>
+          <div class="skill-tags">
+            <span class="skill-tag">Git</span>
+            <span class="skill-tag">Docker</span>
+            <span class="skill-tag">CI/CD</span>
+            <span class="skill-tag">AWS</span>
+            <span class="skill-tag">Linux</span>
+            <span class="skill-tag">Figma</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== PROJECTS ===== -->
+  <section class="section" id="projects">
+    <div class="container">
+      <h2 class="section-title fade-in">Projects</h2>
+      <p class="section-subtitle fade-in">Live demos you can interact with. Click a card to open the app.</p>
+
+      <div class="projects-grid">
+
+        <!-- Project Card 1 -->
+        <a href="projects/demo-1/index.html" class="project-card glass fade-in">
+          <div class="project-thumbnail">
+            <div class="placeholder-content">
+              <div class="coming-soon-icon">&#128640;</div>
+              <span>Demo 1 Preview</span>
+            </div>
+          </div>
+          <div class="project-body">
+            <h3 class="project-title">Task Manager App</h3>
+            <p class="project-desc">
+              A sleek drag-and-drop task management board with categories,
+              priorities, and local storage persistence.
+            </p>
+            <div class="project-tech">
+              <span>HTML</span>
+              <span>CSS</span>
+              <span>JavaScript</span>
+            </div>
+            <div class="project-links">
+              <span>Open Demo &rarr;</span>
+            </div>
+          </div>
+        </a>
+
+        <!-- Project Card 2 -->
+        <a href="projects/demo-2/index.html" class="project-card glass fade-in">
+          <div class="project-thumbnail">
+            <div class="placeholder-content">
+              <div class="coming-soon-icon">&#127759;</div>
+              <span>Demo 2 Preview</span>
+            </div>
+          </div>
+          <div class="project-body">
+            <h3 class="project-title">Weather Dashboard</h3>
+            <p class="project-desc">
+              A weather dashboard with location search, 5-day forecast,
+              and beautiful dynamic backgrounds based on conditions.
+            </p>
+            <div class="project-tech">
+              <span>HTML</span>
+              <span>CSS</span>
+              <span>API</span>
+            </div>
+            <div class="project-links">
+              <span>Open Demo &rarr;</span>
+            </div>
+          </div>
+        </a>
+
+        <!-- Coming Soon Card -->
+        <div class="project-card glass fade-in" style="cursor: default; opacity: 0.5;">
+          <div class="project-thumbnail">
+            <div class="placeholder-content">
+              <div class="coming-soon-icon">&#128295;</div>
+              <span>Coming Soon</span>
+            </div>
+          </div>
+          <div class="project-body">
+            <h3 class="project-title">More Projects Coming</h3>
+            <p class="project-desc">
+              New demo projects are added regularly. Check back soon
+              for more interactive web applications.
+            </p>
+            <div class="project-tech">
+              <span>TBD</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== CONTACT ===== -->
+  <section class="section" id="contact" style="background: var(--bg-secondary);">
+    <div class="container">
+      <h2 class="section-title fade-in">Contact</h2>
+      <p class="section-subtitle fade-in">Let's work together. Reach out through any channel below.</p>
+
+      <div class="contact-content fade-in">
+        <div class="contact-info glass">
+          <p>
+            I'm open to freelance opportunities, collaborations, and
+            interesting projects. Don't hesitate to get in touch!
+          </p>
+          <div class="contact-links">
+            <a href="mailto:sachinmalusare.online@gmail.com" class="contact-link">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0l-9.75 6.75L2.25 6.75" />
+              </svg>
+              sachinmalusare.online@gmail.com
+            </a>
+
+            <a href="https://github.com/sachinm207" target="_blank" rel="noopener noreferrer" class="contact-link">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25M6.75 17.25L1.5 12l5.25-5.25" />
+              </svg>
+              GitHub
+            </a>
+            <a href="https://www.linkedin.com/in/sachin-malusare/" target="_blank" rel="noopener noreferrer" class="contact-link">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m9.86-2.019a4.5 4.5 0 00-1.242-7.244l-4.5-4.5a4.5 4.5 0 00-6.364 6.364L4.343 8.07" />
+              </svg>
+              LinkedIn
+            </a>
+          </div>
+        </div>
+
+        <div class="contact-form glass">
+          <h3>Send a Message</h3>
+          <form>
+            <div class="form-group">
+              <label for="name">Name</label>
+              <input type="text" id="name" placeholder="Your name" />
+            </div>
+            <div class="form-group">
+              <label for="email">Email</label>
+              <input type="email" id="email" placeholder="you@example.com" />
+            </div>
+            <div class="form-group">
+              <label for="message">Message</label>
+              <textarea id="message" placeholder="Tell me about your project..."></textarea>
+            </div>
+            <button type="submit" class="form-submit">Send Message</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; 2026 Sachin Malusare. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
