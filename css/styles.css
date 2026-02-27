@@ -385,20 +385,15 @@ img {
 }
 
 .about-image-wrapper {
-  aspect-ratio: 1;
   border-radius: var(--radius);
   overflow: hidden;
   border: 2px solid var(--glass-border);
   background: var(--bg-tertiary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .about-image {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  display: block;
 }
 
 .about-card {

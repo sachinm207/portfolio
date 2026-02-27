@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MetricMind Guide — Sachin Malusare</title>
+  <meta name="description" content="How MetricMind works — architecture, features, and a step-by-step testing walkthrough for the AI data & metrics assistant." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/styles.css" />
+  <link rel="stylesheet" href="../css/guide.css" />
+</head>
+<body>
+
+  <!-- ===== NAVIGATION ===== -->
+  <nav class="navbar">
+    <div class="container">
+      <a href="../index.html" class="nav-logo">sachin<span>.</span></a>
+      <ul class="nav-links">
+        <li><a href="#overview">Overview</a></li>
+        <li><a href="#architecture">Architecture</a></li>
+        <li><a href="#how-to-test">How to Test</a></li>
+        <li><a href="#features">Features</a></li>
+        <li><a href="https://metricmind.sachinmalusare.online" target="_blank" rel="noopener noreferrer">Open App</a></li>
+      </ul>
+      <button class="hamburger" aria-label="Toggle navigation">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ===== GUIDE HERO ===== -->
+  <section class="guide-hero">
+    <div class="hero-bg"></div>
+    <div class="container">
+      <h1 class="fade-in"><span class="highlight">MetricMind</span> — Data & Metrics Assistant</h1>
+      <p class="guide-subtitle fade-in">
+        Upload spreadsheets, ask questions about your data in plain English, and get AI-generated charts, tables, and insights — no SQL knowledge required.
+      </p>
+      <div class="guide-tech fade-in">
+        <span>React</span>
+        <span>TypeScript</span>
+        <span>FastAPI</span>
+        <span>DuckDB</span>
+        <span>Google Gemini</span>
+        <span>Recharts</span>
+        <span>SSE Streaming</span>
+        <span>Docker</span>
+        <span>Ubuntu VPS</span>
+      </div>
+      <div class="guide-actions fade-in">
+        <a href="https://metricmind.sachinmalusare.online" target="_blank" rel="noopener noreferrer" class="btn-primary">
+          Open App
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-4.5-6H18m0 0v4.5m0-4.5L10.5 13.5" /></svg>
+        </a>
+        <a href="../index.html#projects" class="btn-secondary">
+          &larr; Back to Portfolio
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== OVERVIEW ===== -->
+  <section class="section" id="overview">
+    <div class="container">
+      <p class="guide-section-label fade-in">Overview</p>
+      <h2 class="section-title fade-in">What is MetricMind?</h2>
+      <p class="section-subtitle fade-in">A conversational data analysis tool that turns spreadsheets into insights with natural language.</p>
+
+      <div class="about-card glass fade-in" style="max-width: 800px;">
+        <p>
+          MetricMind is an AI-powered data and metrics assistant. Upload any CSV or Excel file, ask questions in plain English, and get instant answers with auto-generated charts, sortable data tables, and the SQL query behind each result.
+        </p>
+        <p>
+          Under the hood, your question is sent to an LLM (Google Gemini by default, with OpenAI and Anthropic also supported) along with the dataset schema. The LLM generates a SQL query, which is executed against an in-memory DuckDB analytical engine for blazing-fast results. It also picks the best chart type automatically — line charts for trends, bar charts for comparisons, pie charts for distributions, and scatter plots for correlations.
+        </p>
+        <p>
+          The app comes pre-loaded with three sample datasets — sales transactions, website analytics, and an employee survey — so you can start asking questions immediately without uploading anything.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== ARCHITECTURE ===== -->
+  <section class="section" id="architecture" style="background: var(--bg-secondary);">
+    <div class="container">
+      <p class="guide-section-label fade-in">Architecture</p>
+      <h2 class="section-title fade-in">How It Works</h2>
+      <p class="section-subtitle fade-in">Two pipelines power MetricMind — one for data ingestion, one for querying.</p>
+
+      <div class="glass fade-in" style="margin-bottom: 28px;">
+        <p style="padding: 20px 24px 8px; color: var(--accent); font-weight: 600; font-size: 0.9rem;">Data Ingestion Pipeline</p>
+        <div class="flow-diagram">
+          <div class="flow-step">Upload CSV/Excel</div>
+          <span class="flow-arrow">&rarr;</span>
+          <div class="flow-step">Parse (pandas)</div>
+          <span class="flow-arrow">&rarr;</span>
+          <div class="flow-step">Infer Types</div>
+          <span class="flow-arrow">&rarr;</span>
+          <div class="flow-step">Register in DuckDB</div>
+          <span class="flow-arrow">&rarr;</span>
+          <div class="flow-step">Ready to Query</div>
+        </div>
+      </div>
+
+      <div class="glass fade-in">
+        <p style="padding: 20px 24px 8px; color: var(--accent); font-weight: 600; font-size: 0.9rem;">Query Pipeline (SSE Streaming)</p>
+        <div class="flow-diagram">
+          <div class="flow-step">Ask Question</div>
+          <span class="flow-arrow">&rarr;</span>
+          <div class="flow-step">LLM &rarr; SQL</div>
+          <span class="flow-arrow">&rarr;</span>
+          <div class="flow-step">Execute (DuckDB)</div>
+          <span class="flow-arrow">&rarr;</span>
+          <div class="flow-step">Pick Chart Type</div>
+          <span class="flow-arrow">&rarr;</span>
+          <div class="flow-step">Stream Results</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== HOW TO TEST ===== -->
+  <section class="section" id="how-to-test">
+    <div class="container">
+      <p class="guide-section-label fade-in">Testing Walkthrough</p>
+      <h2 class="section-title fade-in">How to Test</h2>
+      <p class="section-subtitle fade-in">Follow these 6 steps to explore every feature of MetricMind.</p>
+
+      <div class="steps-grid">
+
+        <!-- Step 1 -->
+        <div class="step-card glass fade-in">
+          <div class="step-number">1</div>
+          <div class="step-content">
+            <h3>Explore Pre-loaded Datasets</h3>
+            <p>MetricMind comes with 3 seed datasets already loaded and ready to query. You'll see them in the sidebar when you open the app.</p>
+            <div class="try-it-box">
+              <strong>Pre-loaded datasets:</strong><br />
+              &bull; Sales Data 2025 (products, regions, revenue, profit)<br />
+              &bull; Website Analytics (pages, visitors, bounce rates, conversions)<br />
+              &bull; Employee Survey (departments, satisfaction, tenure)
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="step-card glass fade-in">
+          <div class="step-number">2</div>
+          <div class="step-content">
+            <h3>Ask a Question</h3>
+            <p>Select a dataset from the sidebar, then type a natural-language question in the chat input. MetricMind will generate a SQL query, run it, and display the results with a chart, table, and the generated SQL.</p>
+            <div class="try-it-box">
+              <strong>Try these (Sales Data):</strong><br />
+              &bull; "What was our total revenue in January?"<br />
+              &bull; "Which product had the highest profit?"<br />
+              &bull; "Show me revenue by region"
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="step-card glass fade-in">
+          <div class="step-number">3</div>
+          <div class="step-content">
+            <h3>Explore the Result Tabs</h3>
+            <p>Each answer appears with three tabs you can switch between — Chart, Table, and Query. The chart is auto-selected for the best visualization. The table lets you sort and filter rows. The query tab shows exactly what SQL was generated.</p>
+            <div class="try-it-box">
+              <strong>What you'll see:</strong> An interactive chart with the best visualization type auto-selected, a sortable data table with the raw results, and the generated SQL query with syntax highlighting.
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="step-card glass fade-in">
+          <div class="step-number">4</div>
+          <div class="step-content">
+            <h3>Try Different Chart Types</h3>
+            <p>The AI picks the best chart type based on your question. Try different questions to see bar charts, line charts, pie charts, and scatter plots.</p>
+            <div class="try-it-box">
+              <strong>Try these to see different charts:</strong><br />
+              &bull; "Monthly sales trend" &rarr; Line chart<br />
+              &bull; "Revenue by region" &rarr; Pie chart<br />
+              &bull; "Compare product revenue" &rarr; Bar chart<br />
+              &bull; "Tenure vs satisfaction" (Employee Survey) &rarr; Scatter plot
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 5 -->
+        <div class="step-card glass fade-in">
+          <div class="step-number">5</div>
+          <div class="step-content">
+            <h3>Use Follow-Up Questions</h3>
+            <p>After each answer, MetricMind suggests follow-up questions you can click to dive deeper into the data. This creates a natural conversation flow for data exploration.</p>
+            <div class="try-it-box">
+              <strong>Tip:</strong> Click any suggested follow-up to continue exploring without typing. The AI considers prior context when generating each answer.
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 6 -->
+        <div class="step-card glass fade-in">
+          <div class="step-number">6</div>
+          <div class="step-content">
+            <h3>Upload Your Own Data</h3>
+            <p>Click the upload button in the sidebar and drag & drop a CSV or Excel file (up to 50 MB). It will be parsed, loaded into DuckDB, and ready to query immediately.</p>
+            <div class="try-it-box">
+              <strong>Tip:</strong> Try uploading a spreadsheet from your own work — monthly expenses, project tracking, survey results — and ask questions about it in plain English.
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FEATURES ===== -->
+  <section class="section" id="features" style="background: var(--bg-secondary);">
+    <div class="container">
+      <p class="guide-section-label fade-in">Features</p>
+      <h2 class="section-title fade-in">Key Features</h2>
+      <p class="section-subtitle fade-in">Everything built into MetricMind.</p>
+
+      <div class="feature-grid">
+
+        <div class="feature-card glass fade-in">
+          <div class="feature-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" /></svg>
+          </div>
+          <h3>Natural Language Queries</h3>
+          <p>Ask questions about your data in plain English. The AI converts your question to SQL and returns results instantly.</p>
+        </div>
+
+        <div class="feature-card glass fade-in">
+          <div class="feature-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" /></svg>
+          </div>
+          <h3>Smart Chart Selection</h3>
+          <p>The AI automatically picks the best chart type — line for trends, bar for comparisons, pie for distributions, scatter for correlations.</p>
+        </div>
+
+        <div class="feature-card glass fade-in">
+          <div class="feature-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5M9 11.25v1.5M12 9v3.75m3-6v6" /></svg>
+          </div>
+          <h3>Interactive Visualizations</h3>
+          <p>Hover for tooltips, click legends to toggle series, and explore results across Chart, Table, and Query tabs.</p>
+        </div>
+
+        <div class="feature-card glass fade-in">
+          <div class="feature-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75m16.5 0c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125" /></svg>
+          </div>
+          <h3>DuckDB SQL Engine</h3>
+          <p>In-memory analytical database for blazing-fast query execution. Supports window functions, CTEs, aggregations, and date formatting.</p>
+        </div>
+
+        <div class="feature-card glass fade-in">
+          <div class="feature-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9.348 14.651a3.75 3.75 0 010-5.303m5.304 0a3.75 3.75 0 010 5.303m-7.425 2.122a6.75 6.75 0 010-9.546m9.546 0a6.75 6.75 0 010 9.546M5.106 18.894c-3.808-3.808-3.808-9.98 0-13.789m13.788 0c3.808 3.808 3.808 9.981 0 13.79M12 12h.008v.007H12V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg>
+          </div>
+          <h3>Real-Time Streaming</h3>
+          <p>Server-Sent Events stream each processing step live — "Analyzing...", SQL generated, results rendered — for instant feedback.</p>
+        </div>
+
+        <div class="feature-card glass fade-in">
+          <div class="feature-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
+          </div>
+          <h3>CSV & Excel Upload</h3>
+          <p>Drag & drop CSV or Excel files up to 50 MB. Data is parsed, types inferred, and loaded into DuckDB instantly.</p>
+        </div>
+
+        <div class="feature-card glass fade-in">
+          <div class="feature-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" /></svg>
+          </div>
+          <h3>Follow-Up Suggestions</h3>
+          <p>After each answer, the AI suggests relevant follow-up questions to help you explore your data deeper with one click.</p>
+        </div>
+
+        <div class="feature-card glass fade-in">
+          <div class="feature-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" /></svg>
+          </div>
+          <h3>Multi-Provider LLM</h3>
+          <p>Supports Google Gemini, OpenAI GPT-4o, and Anthropic Claude. Switch providers without changing any code.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; 2026 Sachin Malusare. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="../js/main.js"></script>
+</body>
+</html>
