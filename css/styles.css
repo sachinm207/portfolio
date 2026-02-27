@@ -395,18 +395,10 @@ img {
   justify-content: center;
 }
 
-.about-image-placeholder {
-  color: var(--text-muted);
-  text-align: center;
-  font-size: 0.9rem;
-  padding: 24px;
-}
-
-.about-image-placeholder svg {
-  width: 64px;
-  height: 64px;
-  margin-bottom: 12px;
-  stroke: var(--text-muted);
+.about-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .about-card {
