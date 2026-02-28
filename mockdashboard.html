@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Operations Dashboard — Resume Matching Engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-primary: #0a0a0f;
+      --bg-secondary: #12121a;
+      --bg-tertiary: #1a1a2e;
+      --accent: #00d4ff;
+      --accent-subtle: rgba(0, 212, 255, 0.08);
+      --text-primary: #e8e8f0;
+      --text-secondary: #a0a0b8;
+      --text-muted: #6a6a80;
+      --glass-bg: rgba(255, 255, 255, 0.04);
+      --glass-border: rgba(255, 255, 255, 0.08);
+      --glass-hover-bg: rgba(255, 255, 255, 0.07);
+      --glass-hover-border: rgba(0, 212, 255, 0.2);
+      --green: #22c55e;
+      --green-bg: rgba(34, 197, 94, 0.1);
+      --red: #ef4444;
+      --red-bg: rgba(239, 68, 68, 0.1);
+      --yellow: #f59e0b;
+      --yellow-bg: rgba(245, 158, 11, 0.1);
+      --radius: 16px;
+      --radius-sm: 8px;
+    }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { font-size: 16px; scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg-primary); color: var(--text-primary);
+      line-height: 1.6; min-height: 100vh;
+    }
+
+    /* Header */
+    .dash-header {
+      padding: 16px 32px; border-bottom: 1px solid var(--glass-border);
+      display: flex; align-items: center; justify-content: space-between;
+      background: var(--bg-secondary); position: sticky; top: 0; z-index: 100;
+    }
+    .dash-header-left { display: flex; align-items: center; gap: 16px; }
+    .dash-logo { font-size: 1.2rem; font-weight: 700; }
+    .dash-logo span { color: var(--accent); }
+    .dash-badge {
+      font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;
+      padding: 3px 10px; border-radius: 20px;
+      background: var(--accent-subtle); color: var(--accent);
+      border: 1px solid rgba(0, 212, 255, 0.2);
+    }
+    .dash-header-right { display: flex; align-items: center; gap: 14px; }
+    .live-dot {
+      width: 8px; height: 8px; background: var(--green); border-radius: 50%;
+      box-shadow: 0 0 8px var(--green); animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%,100% { opacity:1 } 50% { opacity:0.4 } }
+    .live-text { font-size: 0.8rem; color: var(--green); font-weight: 500; }
+
+    /* Tabs */
+    .tabs {
+      display: flex; gap: 0; border-bottom: 1px solid var(--glass-border);
+      background: var(--bg-secondary); padding: 0 32px;
+      position: sticky; top: 57px; z-index: 99;
+    }
+    .tab {
+      padding: 12px 24px; font-size: 0.85rem; font-weight: 500;
+      color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent;
+      transition: all 0.2s; background: none; border-top: none; border-left: none; border-right: none;
+    }
+    .tab:hover { color: var(--text-secondary); }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    .dash-main { max-width: 1400px; margin: 0 auto; padding: 24px 32px 60px; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .section-title {
+      font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px;
+      color: var(--text-muted); margin-bottom: 16px; margin-top: 28px;
+    }
+    .section-title:first-child { margin-top: 0; }
+
+    .cards-row { display: grid; gap: 16px; }
+    .cards-row.cols-4 { grid-template-columns: repeat(4, 1fr); }
+    .cards-row.cols-3 { grid-template-columns: repeat(3, 1fr); }
+    .cards-row.cols-2 { grid-template-columns: repeat(2, 1fr); }
+
+    .card {
+      background: var(--glass-bg); border: 1px solid var(--glass-border);
+      border-radius: var(--radius); padding: 24px; transition: all 0.3s;
+    }
+    .card:hover { background: var(--glass-hover-bg); border-color: var(--glass-hover-border); }
+    .card-label {
+      font-size: 0.75rem; font-weight: 500; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;
+    }
+    .card-value { font-size: 2rem; font-weight: 800; line-height: 1.1; margin-bottom: 6px; }
+    .card-sub { font-size: 0.8rem; color: var(--text-secondary); }
+
+    .status-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 0; border-bottom: 1px solid var(--glass-border);
+    }
+    .status-item:last-child { border-bottom: none; }
+    .status-left { display: flex; align-items: center; gap: 10px; }
+    .status-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .status-dot.green { background: var(--green); box-shadow: 0 0 6px rgba(34,197,94,0.4); }
+    .status-dot.yellow { background: var(--yellow); box-shadow: 0 0 6px rgba(245,158,11,0.4); }
+    .status-name { font-size: 0.85rem; font-weight: 500; }
+    .status-val { font-size: 0.8rem; color: var(--text-secondary); font-family: 'JetBrains Mono', monospace; }
+
+    /* Action panel */
+    .action-panel {
+      background: var(--glass-bg); border: 1px solid var(--glass-border);
+      border-radius: var(--radius); padding: 24px; margin-bottom: 24px;
+    }
+    .action-title { font-size: 0.9rem; font-weight: 600; margin-bottom: 16px; }
+    .action-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
+    .action-group { display: flex; flex-direction: column; gap: 6px; }
+    .action-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+
+    .file-input-wrap {
+      position: relative; display: inline-flex;
+    }
+    .file-input-wrap input[type="file"] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer;
+    }
+    .file-input-label {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 20px; border-radius: var(--radius-sm);
+      background: var(--bg-tertiary); border: 1px dashed var(--glass-border);
+      color: var(--text-secondary); font-size: 0.85rem; cursor: pointer;
+      transition: all 0.2s;
+    }
+    .file-input-label:hover { border-color: var(--accent); color: var(--accent); }
+    .file-name {
+      font-size: 0.8rem; color: var(--accent); font-family: 'JetBrains Mono', monospace;
+      max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+
+    .text-input {
+      padding: 10px 16px; border-radius: var(--radius-sm);
+      background: var(--bg-tertiary); border: 1px solid var(--glass-border);
+      color: var(--text-primary); font-size: 0.85rem; font-family: 'Inter', sans-serif;
+      width: 320px; outline: none; transition: border-color 0.2s;
+    }
+    .text-input:focus { border-color: var(--accent); }
+    .text-input::placeholder { color: var(--text-muted); }
+
+    .btn {
+      padding: 10px 24px; border-radius: var(--radius-sm); border: none;
+      font-size: 0.85rem; font-weight: 600; cursor: pointer;
+      transition: all 0.2s; font-family: 'Inter', sans-serif;
+      display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn-primary { background: var(--accent); color: var(--bg-primary); }
+    .btn-primary:hover { filter: brightness(1.15); transform: translateY(-1px); }
+    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+    .btn-secondary {
+      background: transparent; color: var(--accent);
+      border: 1px solid rgba(0,212,255,0.3);
+    }
+    .btn-secondary:hover { background: var(--accent-subtle); }
+    .btn-danger { background: transparent; color: var(--red); border: 1px solid rgba(239,68,68,0.3); }
+    .btn-danger:hover { background: var(--red-bg); }
+
+    .spinner {
+      width: 14px; height: 14px; border: 2px solid transparent;
+      border-top-color: currentColor; border-radius: 50%;
+      animation: spin 0.6s linear infinite; display: none;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Response panel */
+    .response-panel {
+      background: var(--bg-primary); border: 1px solid var(--glass-border);
+      border-radius: var(--radius-sm); padding: 16px; margin-top: 16px;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.8rem;
+      color: var(--text-secondary); max-height: 240px; overflow-y: auto;
+      display: none;
+    }
+    .response-panel.visible { display: block; }
+    .response-panel .res-status { font-weight: 600; margin-bottom: 8px; }
+    .response-panel .res-status.ok { color: var(--green); }
+    .response-panel .res-status.err { color: var(--red); }
+    .response-panel pre {
+      white-space: pre-wrap; word-break: break-word;
+      color: var(--text-secondary); line-height: 1.6;
+    }
+
+    /* Log viewer */
+    .log-viewer {
+      background: var(--bg-primary); border: 1px solid var(--glass-border);
+      border-radius: var(--radius-sm); padding: 16px;
+      max-height: 400px; overflow-y: auto;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; line-height: 1.8;
+    }
+    .log-viewer::-webkit-scrollbar { width: 6px; }
+    .log-viewer::-webkit-scrollbar-track { background: transparent; }
+    .log-viewer::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 3px; }
+    .log-line { display: flex; gap: 8px; white-space: nowrap; animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:translateY(0); } }
+    .log-time { color: var(--text-muted); flex-shrink: 0; }
+    .log-level { flex-shrink: 0; font-weight: 600; min-width: 44px; }
+    .log-level.info { color: var(--accent); }
+    .log-level.warn { color: var(--yellow); }
+    .log-level.error { color: var(--red); }
+    .log-level.debug { color: var(--text-muted); }
+    .log-msg { color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; }
+
+    /* Error table */
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th {
+      text-align: left; font-size: 0.7rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted);
+      padding: 8px 12px; border-bottom: 1px solid var(--glass-border);
+    }
+    .data-table td {
+      font-size: 0.8rem; padding: 10px 12px;
+      border-bottom: 1px solid var(--glass-border); color: var(--text-secondary);
+    }
+    .data-table tr:last-child td { border-bottom: none; }
+    .data-table tr.new-row { animation: fadeIn 0.4s ease; }
+    .err-500 { color: var(--red); font-family: 'JetBrains Mono', monospace; font-weight: 600; }
+    .err-429 { color: var(--yellow); font-family: 'JetBrains Mono', monospace; font-weight: 600; }
+    .err-400 { color: var(--yellow); font-family: 'JetBrains Mono', monospace; font-weight: 600; }
+    .err-200 { color: var(--green); font-family: 'JetBrains Mono', monospace; font-weight: 600; }
+    .err-201 { color: var(--green); font-family: 'JetBrains Mono', monospace; font-weight: 600; }
+
+    /* Test results */
+    .test-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 12px; border-radius: var(--radius-sm); background: var(--bg-primary);
+      margin-bottom: 6px;
+    }
+    .test-icon { font-size: 0.9rem; width: 20px; text-align: center; }
+    .test-icon.pass { color: var(--green); }
+    .test-icon.fail { color: var(--red); }
+    .test-icon.running { color: var(--yellow); animation: spin 0.6s linear infinite; }
+    .test-icon.pending { color: var(--text-muted); }
+    .test-name { font-size: 0.8rem; flex: 1; }
+    .test-time { font-size: 0.7rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+
+    .progress-track {
+      width: 100%; height: 6px; background: var(--bg-tertiary);
+      border-radius: 3px; margin-top: 8px; overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%; border-radius: 3px;
+      background: linear-gradient(90deg, var(--accent), #00ff88); transition: width 0.4s ease;
+    }
+
+    .cost-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 0; border-bottom: 1px solid var(--glass-border);
+    }
+    .cost-row:last-child { border-bottom: none; }
+    .cost-service { font-size: 0.85rem; font-weight: 500; }
+    .cost-detail { font-size: 0.75rem; color: var(--text-muted); }
+    .cost-amount { font-size: 0.9rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+
+    .empty-state {
+      text-align: center; padding: 40px; color: var(--text-muted); font-size: 0.85rem;
+    }
+
+    .counter-update { animation: counterPop 0.3s ease; }
+    @keyframes counterPop { 0% { transform:scale(1) } 50% { transform:scale(1.1) } 100% { transform:scale(1) } }
+
+    @media (max-width: 1024px) {
+      .cards-row.cols-4 { grid-template-columns: repeat(2, 1fr); }
+      .cards-row.cols-3 { grid-template-columns: repeat(2, 1fr); }
+      .text-input { width: 100%; }
+    }
+    @media (max-width: 640px) {
+      .dash-header { padding: 12px 16px; }
+      .tabs { padding: 0 16px; overflow-x: auto; }
+      .tab { padding: 10px 16px; font-size: 0.8rem; white-space: nowrap; }
+      .dash-main { padding: 16px; }
+      .cards-row.cols-4, .cards-row.cols-3, .cards-row.cols-2 { grid-template-columns: 1fr; }
+      .card-value { font-size: 1.5rem; }
+      .action-row { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="dash-header">
+    <div class="dash-header-left">
+      <div class="dash-logo">Ops <span>Dashboard</span></div>
+      <span class="dash-badge">Resume Matching Engine</span>
+    </div>
+    <div class="dash-header-right">
+      <div class="live-dot"></div>
+      <span class="live-text">All Systems Operational</span>
+    </div>
+  </header>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" data-tab="actions">Try API</button>
+    <button class="tab" data-tab="tests">Run Tests</button>
+    <button class="tab" data-tab="logs">Logs</button>
+    <button class="tab" data-tab="monitoring">Monitoring</button>
+    <button class="tab" data-tab="costs">API Costs</button>
+  </div>
+
+  <main class="dash-main">
+
+    <!-- ==================== TAB: TRY API ==================== -->
+    <div class="tab-content active" id="tab-actions">
+
+      <!-- Upload Resume -->
+      <div class="action-panel">
+        <div class="action-title">Upload Resume</div>
+        <div class="action-row">
+          <div class="action-group">
+            <div class="action-label">Select File (PDF / DOCX)</div>
+            <div class="file-input-wrap">
+              <input type="file" id="resumeFile" accept=".pdf,.docx,.doc,.png,.jpg" />
+              <div class="file-input-label" id="fileLabel">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Choose file...
+              </div>
+            </div>
+          </div>
+          <span class="file-name" id="fileName"></span>
+          <button class="btn btn-primary" id="btnUpload" disabled>
+            <div class="spinner" id="spinUpload"></div>
+            Upload &amp; Process
+          </button>
+        </div>
+        <div class="response-panel" id="uploadResponse">
+          <div class="res-status" id="uploadStatus"></div>
+          <pre id="uploadBody"></pre>
+        </div>
+      </div>
+
+      <!-- Match Query -->
+      <div class="action-panel">
+        <div class="action-title">Run Match Query</div>
+        <div class="action-row">
+          <div class="action-group" style="flex:1;">
+            <div class="action-label">Job Description</div>
+            <input class="text-input" id="jdInput" placeholder='e.g. "Hotel General Manager, 10+ years, San Francisco"' />
+          </div>
+          <button class="btn btn-primary" id="btnMatch" disabled>
+            <div class="spinner" id="spinMatch"></div>
+            Find Candidates
+          </button>
+        </div>
+        <div class="response-panel" id="matchResponse">
+          <div class="res-status" id="matchStatus"></div>
+          <pre id="matchBody"></pre>
+        </div>
+      </div>
+
+      <!-- Health Check -->
+      <div class="action-panel">
+        <div class="action-title">Health Check</div>
+        <div class="action-row">
+          <button class="btn btn-secondary" id="btnHealth">
+            <div class="spinner" id="spinHealth"></div>
+            GET /health
+          </button>
+        </div>
+        <div class="response-panel" id="healthResponse">
+          <div class="res-status" id="healthStatus"></div>
+          <pre id="healthBody"></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== TAB: RUN TESTS ==================== -->
+    <div class="tab-content" id="tab-tests">
+      <div class="cards-row cols-2">
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+            <div>
+              <div class="card-label">Test Suite</div>
+              <div style="font-size:0.85rem;color:var(--text-secondary);" id="testSummary">Click "Run Tests" to start</div>
+            </div>
+            <button class="btn btn-primary" id="btnRunTests">
+              <div class="spinner" id="spinTests"></div>
+              Run Tests
+            </button>
+          </div>
+          <div id="testList"></div>
+        </div>
+        <div class="card">
+          <div class="card-label">Coverage by Module</div>
+          <div id="coverageList" style="margin-top:12px;">
+            <div class="empty-state">Run tests to see coverage</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== TAB: LOGS ==================== -->
+    <div class="tab-content" id="tab-logs">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <div class="section-title" style="margin:0;">Request Logs</div>
+        <button class="btn btn-danger" id="btnClearLogs" style="font-size:0.75rem;padding:6px 14px;">Clear</button>
+      </div>
+      <div class="card" style="padding:0;">
+        <div class="log-viewer" id="logViewer">
+          <div class="empty-state">Interact with the API to see logs appear here</div>
+        </div>
+      </div>
+
+      <div class="section-title" style="margin-top:28px;">Error Log</div>
+      <div class="card" style="overflow-x:auto;">
+        <table class="data-table">
+          <thead>
+            <tr><th>Time</th><th>Endpoint</th><th>Status</th><th>Error</th><th>Latency</th></tr>
+          </thead>
+          <tbody id="errorTable">
+            <tr><td colspan="5" class="empty-state">No errors yet — interact with the API above</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ==================== TAB: MONITORING ==================== -->
+    <div class="tab-content" id="tab-monitoring">
+      <div class="section-title">System Health</div>
+      <div class="cards-row cols-4">
+        <div class="card">
+          <div class="card-label">Uptime</div>
+          <div class="card-value" style="color:var(--green);">99.97%</div>
+          <div class="card-sub">Since last deploy</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Avg Response Time</div>
+          <div class="card-value" id="monAvgResponse">—</div>
+          <div class="card-sub" id="monResponseSub">Make API calls to see</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Total Requests</div>
+          <div class="card-value" id="monTotalReqs">0</div>
+          <div class="card-sub" id="monReqsSub">This session</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Errors</div>
+          <div class="card-value" id="monErrors" style="color:var(--green);">0</div>
+          <div class="card-sub" id="monErrorRate">0% error rate</div>
+        </div>
+      </div>
+
+      <div class="section-title">Service Status</div>
+      <div class="card">
+        <div class="status-item">
+          <div class="status-left"><div class="status-dot green"></div><span class="status-name">FastAPI Backend</span></div>
+          <span class="status-val">Healthy &middot; 2 Gunicorn workers</span>
+        </div>
+        <div class="status-item">
+          <div class="status-left"><div class="status-dot green"></div><span class="status-name">PostgreSQL</span></div>
+          <span class="status-val">Connected &middot; 4ms</span>
+        </div>
+        <div class="status-item">
+          <div class="status-left"><div class="status-dot green"></div><span class="status-name">OpenAI API</span></div>
+          <span class="status-val">Connected &middot; 89ms</span>
+        </div>
+        <div class="status-item">
+          <div class="status-left"><div class="status-dot green"></div><span class="status-name">Pinecone</span></div>
+          <span class="status-val">Connected &middot; 23ms</span>
+        </div>
+      </div>
+
+      <div class="section-title">Request History</div>
+      <div class="card" style="overflow-x:auto;">
+        <table class="data-table">
+          <thead>
+            <tr><th>Time</th><th>Method</th><th>Endpoint</th><th>Status</th><th>Latency</th></tr>
+          </thead>
+          <tbody id="requestHistory">
+            <tr><td colspan="5" class="empty-state">No requests yet</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ==================== TAB: API COSTS ==================== -->
+    <div class="tab-content" id="tab-costs">
+      <div class="section-title">Session API Cost</div>
+      <div class="cards-row cols-3">
+        <div class="card">
+          <div class="card-label">Total Spend (this session)</div>
+          <div class="card-value" style="color:var(--accent);" id="costTotal">$0.000</div>
+          <div class="card-sub">Updates with every API call</div>
+        </div>
+        <div class="card">
+          <div class="cost-row">
+            <div><div class="cost-service">OpenAI — Embeddings</div><div class="cost-detail" id="costEmbedDetail">0 tokens &middot; 0 calls</div></div>
+            <div class="cost-amount" id="costEmbed">$0.000</div>
+          </div>
+          <div class="cost-row">
+            <div><div class="cost-service">OpenAI — GPT-4o (ranking)</div><div class="cost-detail" id="costGptDetail">0 tokens &middot; 0 calls</div></div>
+            <div class="cost-amount" id="costGpt">$0.000</div>
+          </div>
+          <div class="cost-row">
+            <div><div class="cost-service">Pinecone — Queries</div><div class="cost-detail" id="costPineconeDetail">0 queries</div></div>
+            <div class="cost-amount" id="costPinecone">$0.000</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-label">Cost Per Request (Avg)</div>
+          <div class="card-value" id="costPerReq">—</div>
+          <div class="card-sub" id="costPerReqSub">Make API calls to see</div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    // ==================== STATE ====================
+    const state = {
+      totalReqs: 0,
+      totalErrors: 0,
+      responseTimes: [],
+      logs: [],
+      errors: [],
+      requests: [],
+      costs: { embedTokens: 0, embedCalls: 0, gptTokens: 0, gptCalls: 0, pineconeCalls: 0 },
+      testsRunning: false,
+    };
+
+    // ==================== TABS ====================
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+      });
+    });
+
+    // ==================== HELPERS ====================
+    function now() {
+      return new Date().toLocaleTimeString('en-US', { hour12: false });
+    }
+
+    function randBetween(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; }
+
+    function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+    function addLog(level, msg) {
+      const lv = document.getElementById('logViewer');
+      if (lv.querySelector('.empty-state')) lv.innerHTML = '';
+      const div = document.createElement('div');
+      div.className = 'log-line';
+      div.innerHTML = `<span class="log-time">${now()}</span><span class="log-level ${level}">${level.toUpperCase().padEnd(5)}</span><span class="log-msg">${msg}</span>`;
+      lv.prepend(div);
+      state.logs.push({ time: now(), level, msg });
+    }
+
+    function addError(endpoint, status, msg, latency) {
+      const tb = document.getElementById('errorTable');
+      if (tb.querySelector('.empty-state')) tb.innerHTML = '';
+      const cls = status >= 500 ? 'err-500' : status === 429 ? 'err-429' : 'err-400';
+      const tr = document.createElement('tr');
+      tr.className = 'new-row';
+      tr.innerHTML = `
+        <td style="font-family:'JetBrains Mono',monospace;white-space:nowrap;">${now()}</td>
+        <td style="font-family:'JetBrains Mono',monospace;white-space:nowrap;">${endpoint}</td>
+        <td><span class="${cls}">${status}</span></td>
+        <td>${msg}</td>
+        <td style="font-family:'JetBrains Mono',monospace;">${latency}</td>`;
+      tb.prepend(tr);
+      state.totalErrors++;
+    }
+
+    function addRequest(method, endpoint, status, latency) {
+      const tb = document.getElementById('requestHistory');
+      if (tb.querySelector('.empty-state')) tb.innerHTML = '';
+      const cls = status < 300 ? 'err-' + status : status < 500 ? 'err-400' : 'err-500';
+      const tr = document.createElement('tr');
+      tr.className = 'new-row';
+      tr.innerHTML = `
+        <td style="font-family:'JetBrains Mono',monospace;white-space:nowrap;">${now()}</td>
+        <td style="font-weight:500;color:var(--text-primary);">${method}</td>
+        <td style="font-family:'JetBrains Mono',monospace;">${endpoint}</td>
+        <td><span class="${cls}">${status}</span></td>
+        <td style="font-family:'JetBrains Mono',monospace;">${latency}</td>`;
+      tb.prepend(tr);
+    }
+
+    function recordRequest(latencyMs) {
+      state.totalReqs++;
+      state.responseTimes.push(latencyMs);
+      updateMonitoring();
+    }
+
+    function updateMonitoring() {
+      const avg = state.responseTimes.length > 0
+        ? Math.round(state.responseTimes.reduce((a, b) => a + b, 0) / state.responseTimes.length) : 0;
+      const el = document.getElementById('monAvgResponse');
+      el.textContent = avg > 999 ? (avg / 1000).toFixed(1) + 's' : avg + 'ms';
+      el.classList.add('counter-update');
+      setTimeout(() => el.classList.remove('counter-update'), 300);
+
+      const rEl = document.getElementById('monTotalReqs');
+      rEl.textContent = state.totalReqs;
+      rEl.classList.add('counter-update');
+      setTimeout(() => rEl.classList.remove('counter-update'), 300);
+
+      const eEl = document.getElementById('monErrors');
+      eEl.textContent = state.totalErrors;
+      eEl.style.color = state.totalErrors > 0 ? 'var(--yellow)' : 'var(--green)';
+
+      const rate = state.totalReqs > 0 ? ((state.totalErrors / state.totalReqs) * 100).toFixed(1) : 0;
+      document.getElementById('monErrorRate').textContent = rate + '% error rate';
+      document.getElementById('monResponseSub').textContent = 'Across ' + state.totalReqs + ' requests';
+    }
+
+    function updateCosts() {
+      const embedCost = state.costs.embedTokens * 0.00002 / 1000;
+      const gptCost = state.costs.gptTokens * 0.005 / 1000;
+      const pineconeCost = state.costs.pineconeCalls * 0.0008;
+      const total = embedCost + gptCost + pineconeCost;
+
+      document.getElementById('costTotal').textContent = '$' + total.toFixed(3);
+      document.getElementById('costEmbed').textContent = '$' + embedCost.toFixed(3);
+      document.getElementById('costGpt').textContent = '$' + gptCost.toFixed(3);
+      document.getElementById('costPinecone').textContent = '$' + pineconeCost.toFixed(3);
+      document.getElementById('costEmbedDetail').textContent = state.costs.embedTokens.toLocaleString() + ' tokens \u00B7 ' + state.costs.embedCalls + ' calls';
+      document.getElementById('costGptDetail').textContent = state.costs.gptTokens.toLocaleString() + ' tokens \u00B7 ' + state.costs.gptCalls + ' calls';
+      document.getElementById('costPineconeDetail').textContent = state.costs.pineconeCalls + ' queries';
+
+      if (state.totalReqs > 0) {
+        const perReq = total / state.totalReqs;
+        document.getElementById('costPerReq').textContent = '$' + perReq.toFixed(4);
+        document.getElementById('costPerReqSub').textContent = 'Based on ' + state.totalReqs + ' requests';
+      }
+    }
+
+    // ==================== FILE INPUT ====================
+    const fileInput = document.getElementById('resumeFile');
+    const fileLabel = document.getElementById('fileLabel');
+    const fileName = document.getElementById('fileName');
+    const btnUpload = document.getElementById('btnUpload');
+
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files.length > 0) {
+        const f = fileInput.files[0];
+        fileName.textContent = f.name;
+        fileLabel.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg> File selected';
+        btnUpload.disabled = false;
+      }
+    });
+
+    // JD input
+    const jdInput = document.getElementById('jdInput');
+    const btnMatch = document.getElementById('btnMatch');
+    jdInput.addEventListener('input', () => { btnMatch.disabled = jdInput.value.trim().length < 3; });
+
+    // ==================== UPLOAD RESUME ====================
+    btnUpload.addEventListener('click', async () => {
+      const f = fileInput.files[0];
+      if (!f) return;
+      const ext = f.name.split('.').pop().toLowerCase();
+      const isValid = ['pdf', 'docx', 'doc'].includes(ext);
+
+      btnUpload.disabled = true;
+      document.getElementById('spinUpload').style.display = 'inline-block';
+      const panel = document.getElementById('uploadResponse');
+      panel.classList.add('visible');
+
+      addLog('debug', `Request: POST /api/resumes/upload \u2014 file=${f.name} size=${(f.size/1024).toFixed(1)}KB`);
+
+      if (!isValid) {
+        await sleep(randBetween(100, 300));
+        const latency = randBetween(8, 15) + 'ms';
+        document.getElementById('uploadStatus').className = 'res-status err';
+        document.getElementById('uploadStatus').textContent = '400 Bad Request';
+        document.getElementById('uploadBody').textContent = JSON.stringify({
+          error: "Unsupported file type: ." + ext,
+          detail: "Accepted formats: PDF, DOCX",
+          request_id: "req_" + Math.random().toString(36).slice(2, 8)
+        }, null, 2);
+        addLog('error', `POST /api/resumes/upload \u2014 400 \u2014 unsupported file type .${ext}`);
+        addError('POST /api/resumes/upload', 400, 'Unsupported file type: .' + ext, latency);
+        addRequest('POST', '/api/resumes/upload', 400, latency);
+        recordRequest(parseInt(latency));
+      } else {
+        addLog('info', `Parsing ${f.name} \u2014 extracting text and metadata...`);
+        await sleep(randBetween(600, 1200));
+
+        const chunks = randBetween(8, 18);
+        const tokens = randBetween(2000, 6000);
+        addLog('info', `Parsed: ${chunks} text chunks, ${tokens.toLocaleString()} tokens extracted`);
+
+        addLog('info', `OpenAI embedding \u2014 ${tokens.toLocaleString()} tokens \u2014 model=text-embedding-3-small`);
+        await sleep(randBetween(400, 900));
+        const embedMs = randBetween(60, 140);
+        addLog('info', `Embedding complete \u2014 ${embedMs}ms \u2014 ${chunks} vectors generated`);
+
+        state.costs.embedTokens += tokens;
+        state.costs.embedCalls++;
+
+        addLog('info', `Pinecone upsert \u2014 ${chunks} vectors \u2014 index=resumes-prod`);
+        await sleep(randBetween(100, 300));
+        const upsertMs = randBetween(12, 35);
+        addLog('info', `Pinecone upsert complete \u2014 ${upsertMs}ms`);
+        state.costs.pineconeCalls++;
+
+        const totalMs = randBetween(1800, 3200);
+        const reqId = "req_" + Math.random().toString(36).slice(2, 8);
+        const candidateId = "c_" + randBetween(1000, 9999);
+
+        document.getElementById('uploadStatus').className = 'res-status ok';
+        document.getElementById('uploadStatus').textContent = '201 Created';
+        document.getElementById('uploadBody').textContent = JSON.stringify({
+          status: "processed",
+          candidate_id: candidateId,
+          file: f.name,
+          chunks: chunks,
+          tokens_embedded: tokens,
+          processing_time_ms: totalMs,
+          request_id: reqId
+        }, null, 2);
+        addLog('info', `POST /api/resumes/upload \u2014 201 Created \u2014 ${totalMs}ms \u2014 ${reqId}`);
+        addRequest('POST', '/api/resumes/upload', 201, totalMs + 'ms');
+        recordRequest(totalMs);
+        updateCosts();
+      }
+
+      btnUpload.disabled = false;
+      document.getElementById('spinUpload').style.display = 'none';
+    });
+
+    // ==================== MATCH QUERY ====================
+    btnMatch.addEventListener('click', async () => {
+      const jd = jdInput.value.trim();
+      if (!jd) return;
+
+      btnMatch.disabled = true;
+      document.getElementById('spinMatch').style.display = 'inline-block';
+      const panel = document.getElementById('matchResponse');
+      panel.classList.add('visible');
+
+      const reqId = "req_" + Math.random().toString(36).slice(2, 8);
+      addLog('debug', `Request: POST /api/match \u2014 jd="${jd.slice(0, 60)}..." \u2014 ${reqId}`);
+
+      addLog('info', `JD parsed \u2014 extracting requirements and weights...`);
+      await sleep(randBetween(300, 600));
+      addLog('info', `Extracted: ${randBetween(4, 7)} criteria from job description`);
+
+      addLog('info', `Pinecone query \u2014 top_k=50 \u2014 semantic search + metadata filter`);
+      await sleep(randBetween(200, 500));
+      const pineconeMs = randBetween(18, 45);
+      addLog('info', `Pinecone returned 50 candidates \u2014 ${pineconeMs}ms`);
+      state.costs.pineconeCalls++;
+
+      addLog('info', `GPT-4o re-ranking \u2014 scoring 50 candidates against JD criteria`);
+      await sleep(randBetween(800, 1500));
+      const gptTokens = randBetween(600, 1200);
+      addLog('info', `Re-ranking complete \u2014 ${gptTokens} tokens \u2014 top 25 selected`);
+      state.costs.gptTokens += gptTokens;
+      state.costs.gptCalls++;
+
+      const totalMs = randBetween(2200, 4100);
+      const names = ['Sarah Mitchell','James Park','Maria Rodriguez','David Chen','Emily Watson'];
+      const top5 = names.map((n, i) => ({
+        rank: i + 1,
+        name: n,
+        score: (0.95 - i * 0.03).toFixed(2),
+        weighted_score: 95 - i * 3
+      }));
+
+      document.getElementById('matchStatus').className = 'res-status ok';
+      document.getElementById('matchStatus').textContent = '200 OK';
+      document.getElementById('matchBody').textContent = JSON.stringify({
+        query: jd,
+        total_candidates_searched: 50,
+        results_returned: 25,
+        top_5: top5,
+        processing_time_ms: totalMs,
+        costs: { embedding_tokens: 0, gpt4o_tokens: gptTokens, pinecone_queries: 1 },
+        request_id: reqId,
+        note: "Showing top 5 of 25 results"
+      }, null, 2);
+
+      addLog('info', `POST /api/match \u2014 200 OK \u2014 25 candidates \u2014 ${totalMs}ms \u2014 ${reqId}`);
+      addRequest('POST', '/api/match', 200, totalMs + 'ms');
+      recordRequest(totalMs);
+      updateCosts();
+
+      btnMatch.disabled = false;
+      document.getElementById('spinMatch').style.display = 'none';
+    });
+
+    // ==================== HEALTH CHECK ====================
+    document.getElementById('btnHealth').addEventListener('click', async () => {
+      const btn = document.getElementById('btnHealth');
+      btn.disabled = true;
+      document.getElementById('spinHealth').style.display = 'inline-block';
+      const panel = document.getElementById('healthResponse');
+      panel.classList.add('visible');
+
+      addLog('debug', 'Request: GET /health');
+      await sleep(randBetween(100, 300));
+
+      const dbMs = randBetween(2, 8);
+      const pineconeMs = randBetween(15, 40);
+      const openaiMs = randBetween(60, 120);
+      const totalMs = Math.max(dbMs, pineconeMs, openaiMs) + randBetween(2, 5);
+
+      document.getElementById('healthStatus').className = 'res-status ok';
+      document.getElementById('healthStatus').textContent = '200 OK';
+      document.getElementById('healthBody').textContent = JSON.stringify({
+        status: "healthy",
+        services: {
+          fastapi: { status: "ok", workers: 2 },
+          postgresql: { status: "connected", latency_ms: dbMs },
+          openai: { status: "connected", latency_ms: openaiMs },
+          pinecone: { status: "connected", latency_ms: pineconeMs }
+        },
+        uptime_seconds: randBetween(80000, 200000),
+        version: "1.0.0"
+      }, null, 2);
+
+      addLog('info', `GET /health \u2014 200 OK \u2014 DB: ${dbMs}ms, Pinecone: ${pineconeMs}ms, OpenAI: ${openaiMs}ms`);
+      addRequest('GET', '/health', 200, totalMs + 'ms');
+      recordRequest(totalMs);
+
+      btn.disabled = false;
+      document.getElementById('spinHealth').style.display = 'none';
+    });
+
+    // ==================== RUN TESTS ====================
+    const testSuite = [
+      { name: 'test_health_returns_200', time: '0.04s', timeMs: 40 },
+      { name: 'test_health_checks_db_connection', time: '0.08s', timeMs: 80 },
+      { name: 'test_upload_valid_pdf_201', time: '0.34s', timeMs: 340 },
+      { name: 'test_upload_rejects_invalid_filetype', time: '0.05s', timeMs: 50 },
+      { name: 'test_upload_rejects_oversized_file', time: '0.06s', timeMs: 60 },
+      { name: 'test_embedding_generates_vectors', time: '0.89s', timeMs: 890 },
+      { name: 'test_pinecone_upsert_stores', time: '1.12s', timeMs: 1120 },
+      { name: 'test_pinecone_query_returns_results', time: '0.67s', timeMs: 670 },
+      { name: 'test_match_returns_top_25', time: '0.45s', timeMs: 450 },
+      { name: 'test_match_rejects_empty_jd', time: '0.09s', timeMs: 90 },
+      { name: 'test_weighted_ranking_correct', time: '0.18s', timeMs: 180 },
+      { name: 'test_openai_timeout_handled', time: '0.31s', timeMs: 310 },
+      { name: 'test_pinecone_down_fallback', time: '0.27s', timeMs: 270 },
+      { name: 'test_invalid_candidate_id_400', time: '0.05s', timeMs: 50 },
+      { name: 'test_auth_rejects_no_token', time: '0.03s', timeMs: 30 },
+      { name: 'test_rate_limit_enforced', time: '0.14s', timeMs: 140 },
+      { name: 'test_sql_injection_blocked', time: '0.06s', timeMs: 60 },
+      { name: 'test_delete_candidate_removes_vectors', time: '0.42s', timeMs: 420 },
+    ];
+
+    document.getElementById('btnRunTests').addEventListener('click', async () => {
+      if (state.testsRunning) return;
+      state.testsRunning = true;
+      const btn = document.getElementById('btnRunTests');
+      btn.disabled = true;
+      document.getElementById('spinTests').style.display = 'inline-block';
+
+      const list = document.getElementById('testList');
+      list.innerHTML = '';
+      document.getElementById('testSummary').textContent = 'Running...';
+      document.getElementById('testSummary').style.color = 'var(--yellow)';
+
+      addLog('info', 'pytest tests/ -v \u2014 starting test suite (18 tests)');
+
+      // Render all tests as pending
+      testSuite.forEach(t => {
+        const div = document.createElement('div');
+        div.className = 'test-item';
+        div.id = 'test-' + t.name;
+        div.innerHTML = `<span class="test-icon pending">\u25CB</span><span class="test-name">${t.name}</span><span class="test-time">—</span>`;
+        list.appendChild(div);
+      });
+
+      // Run each test sequentially
+      let passed = 0;
+      for (const t of testSuite) {
+        const div = document.getElementById('test-' + t.name);
+        div.querySelector('.test-icon').className = 'test-icon running';
+        div.querySelector('.test-icon').textContent = '\u25CB';
+
+        await sleep(randBetween(80, 250));
+
+        div.querySelector('.test-icon').className = 'test-icon pass';
+        div.querySelector('.test-icon').textContent = '\u2713';
+        div.querySelector('.test-time').textContent = t.time;
+        passed++;
+        document.getElementById('testSummary').textContent = `${passed}/${testSuite.length} passed...`;
+        addLog('info', `  PASSED ${t.name} (${t.time})`);
+      }
+
+      const totalTime = (testSuite.reduce((a, t) => a + t.timeMs, 0) / 1000).toFixed(1);
+      document.getElementById('testSummary').textContent = `${passed}/${testSuite.length} Passed in ${totalTime}s`;
+      document.getElementById('testSummary').style.color = 'var(--green)';
+      addLog('info', `pytest \u2014 ${passed} passed in ${totalTime}s \u2014 all green`);
+
+      // Show coverage
+      const coverage = [
+        { module: 'API Endpoints', pct: 96 },
+        { module: 'Error Handling', pct: 92 },
+        { module: 'Database Queries', pct: 91 },
+        { module: 'External API Calls', pct: 88 },
+        { module: 'Input Validation', pct: 94 },
+        { module: 'Auth & Middleware', pct: 85 },
+      ];
+      const cl = document.getElementById('coverageList');
+      cl.innerHTML = '';
+      for (const c of coverage) {
+        await sleep(60);
+        const color = c.pct >= 90 ? 'var(--green)' : 'var(--accent)';
+        const div = document.createElement('div');
+        div.style.animation = 'fadeIn 0.3s ease';
+        div.innerHTML = `<div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+          <span style="font-size:0.8rem;">${c.module}</span>
+          <span style="font-size:0.75rem;color:${color};font-family:'JetBrains Mono',monospace;">${c.pct}%</span>
+        </div><div class="progress-track"><div class="progress-fill" style="width:${c.pct}%;"></div></div>`;
+        cl.appendChild(div);
+      }
+
+      addLog('info', 'Coverage: 91% overall \u2014 report generated');
+
+      btn.disabled = false;
+      document.getElementById('spinTests').style.display = 'none';
+      state.testsRunning = false;
+    });
+
+    // ==================== CLEAR LOGS ====================
+    document.getElementById('btnClearLogs').addEventListener('click', () => {
+      document.getElementById('logViewer').innerHTML = '<div class="empty-state">Logs cleared</div>';
+      state.logs = [];
+    });
+  </script>
+</body>
+</html>
