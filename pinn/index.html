@@ -1,0 +1,1531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PINN Toolkit — Sachin Malusare</title>
+  <meta name="description" content="Physics-Informed Neural Networks — from first principles to production. Learn PINN concepts and interact with 14 live tools." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    /* ============================================
+       Theme
+    ============================================ */
+    :root {
+      --bg-primary: #0a0a0f;
+      --bg-secondary: #12121a;
+      --bg-tertiary: #1a1a2e;
+      --accent: #00d4ff;
+      --accent-glow: rgba(0, 212, 255, 0.3);
+      --accent-subtle: rgba(0, 212, 255, 0.08);
+      --accent-purple: #7c3aed;
+      --accent-green: #22c55e;
+      --accent-orange: #f59e0b;
+      --text-primary: #e8e8f0;
+      --text-secondary: #a0a0b8;
+      --text-muted: #6a6a80;
+      --glass-bg: rgba(255, 255, 255, 0.04);
+      --glass-border: rgba(255, 255, 255, 0.08);
+      --glass-hover-bg: rgba(255, 255, 255, 0.07);
+      --glass-hover-border: rgba(0, 212, 255, 0.2);
+      --radius: 16px;
+      --radius-sm: 8px;
+      --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      --transition: 0.3s ease;
+      --max-width: 1200px;
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; font-size: 16px; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+    a { color: var(--accent); text-decoration: none; transition: color var(--transition); }
+    a:hover { color: #66e5ff; }
+
+    .container { max-width: var(--max-width); margin: 0 auto; padding: 0 24px; }
+    .section { padding: 100px 0; }
+    .section-alt { background: var(--bg-secondary); }
+
+    .section-label {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--accent-subtle); border: 1px solid rgba(0,212,255,0.15);
+      border-radius: 24px; padding: 6px 16px; margin-bottom: 20px;
+      font-size: 0.75rem; font-weight: 600; color: var(--accent);
+      text-transform: uppercase; letter-spacing: 1px;
+    }
+    .section-title {
+      font-size: 2rem; font-weight: 700; margin-bottom: 0.5em;
+      position: relative; display: inline-block;
+    }
+    .section-title::after {
+      content: ''; position: absolute; bottom: -8px; left: 0;
+      width: 60px; height: 3px; background: var(--accent); border-radius: 2px;
+    }
+    .section-subtitle {
+      color: var(--text-secondary); font-size: 1.05rem;
+      margin-bottom: 3rem; max-width: 640px; margin-top: 1.2rem;
+    }
+
+    .glass {
+      background: var(--glass-bg); border: 1px solid var(--glass-border);
+      border-radius: var(--radius); backdrop-filter: blur(12px);
+    }
+
+    .fade-in { opacity: 0; transform: translateY(28px); transition: opacity 0.6s ease, transform 0.6s ease; }
+    .fade-in.visible { opacity: 1; transform: translateY(0); }
+
+    .mono { font-family: 'JetBrains Mono', monospace; }
+
+    /* ============================================
+       Nav
+    ============================================ */
+    .navbar {
+      position: fixed; top: 0; left: 0; width: 100%; z-index: 1000;
+      padding: 16px 0; transition: background var(--transition), box-shadow var(--transition);
+    }
+    .navbar.scrolled {
+      background: rgba(10, 10, 15, 0.92); backdrop-filter: blur(16px);
+      box-shadow: 0 2px 24px rgba(0,0,0,0.4);
+    }
+    .navbar .container { display: flex; align-items: center; justify-content: space-between; }
+    .nav-logo { font-size: 1.3rem; font-weight: 700; color: var(--text-primary); }
+    .nav-logo span { color: var(--accent); }
+    .nav-links { display: flex; gap: 28px; list-style: none; align-items: center; }
+    .nav-links a {
+      color: var(--text-secondary); font-size: 0.9rem; font-weight: 500;
+      position: relative; padding: 4px 0;
+    }
+    .nav-links a::after {
+      content: ''; position: absolute; bottom: -2px; left: 0;
+      width: 0; height: 2px; background: var(--accent); transition: width var(--transition);
+    }
+    .nav-links a:hover { color: var(--text-primary); }
+    .nav-links a:hover::after { width: 100%; }
+    .hamburger {
+      display: none; flex-direction: column; gap: 5px;
+      cursor: pointer; background: none; border: none; padding: 4px;
+    }
+    .hamburger span {
+      display: block; width: 24px; height: 2px;
+      background: var(--text-primary); border-radius: 2px;
+      transition: transform var(--transition), opacity var(--transition);
+    }
+    .hamburger.active span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+    .hamburger.active span:nth-child(2) { opacity: 0; }
+    .hamburger.active span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+
+    /* ============================================
+       Hero
+    ============================================ */
+    .hero {
+      min-height: 100vh; display: flex; align-items: center;
+      position: relative; overflow: hidden;
+    }
+    .hero-bg {
+      position: absolute; inset: 0; z-index: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 15% 40%, rgba(0,212,255,0.09) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 85% 60%, rgba(124,58,237,0.07) 0%, transparent 60%);
+      animation: heroPulse 8s ease-in-out infinite alternate;
+    }
+    @keyframes heroPulse {
+      0% { opacity: 0.6; transform: scale(1); }
+      100% { opacity: 1; transform: scale(1.04); }
+    }
+    .hero .container { position: relative; z-index: 1; }
+    .hero-content { max-width: 780px; }
+    .hero-eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--accent-subtle); border: 1px solid rgba(0,212,255,0.15);
+      border-radius: 24px; padding: 6px 16px; margin-bottom: 24px;
+      font-size: 0.78rem; font-weight: 600; color: var(--accent);
+      text-transform: uppercase; letter-spacing: 1.2px;
+    }
+    .hero-title {
+      font-size: clamp(2.6rem, 6vw, 4.2rem); font-weight: 800;
+      line-height: 1.08; margin-bottom: 20px;
+    }
+    .hero-title .highlight {
+      background: linear-gradient(135deg, var(--accent), #7c3aed);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .hero-subtitle {
+      font-size: clamp(1rem, 2vw, 1.2rem); color: var(--text-secondary);
+      max-width: 620px; margin-bottom: 36px; line-height: 1.75;
+    }
+    .hero-stats {
+      display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 40px;
+    }
+    .hero-stat {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--glass-bg); border: 1px solid var(--glass-border);
+      border-radius: 50px; padding: 8px 20px;
+    }
+    .hero-stat-num { font-size: 1.15rem; font-weight: 700; color: var(--accent); }
+    .hero-stat-label { font-size: 0.82rem; color: var(--text-secondary); }
+    .hero-ctas { display: flex; gap: 16px; flex-wrap: wrap; }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 14px 32px; background: var(--accent); color: var(--bg-primary);
+      font-size: 0.95rem; font-weight: 600; border-radius: 50px;
+      transition: transform var(--transition), box-shadow var(--transition);
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px); box-shadow: 0 8px 30px var(--accent-glow);
+      color: var(--bg-primary);
+    }
+    .btn-secondary {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 14px 32px; background: transparent;
+      border: 1px solid var(--glass-border); color: var(--text-primary);
+      font-size: 0.95rem; font-weight: 600; border-radius: 50px;
+      transition: border-color var(--transition), background var(--transition), transform var(--transition);
+    }
+    .btn-secondary:hover {
+      border-color: var(--accent); background: var(--accent-subtle);
+      transform: translateY(-2px); color: var(--text-primary);
+    }
+    .scroll-indicator {
+      position: absolute; bottom: 40px; left: 50%;
+      transform: translateX(-50%); display: flex; flex-direction: column;
+      align-items: center; gap: 8px; color: var(--text-muted);
+      font-size: 0.78rem; animation: scrollBounce 2s ease-in-out infinite;
+    }
+    .scroll-indicator .mouse {
+      width: 24px; height: 38px; border: 2px solid var(--text-muted); border-radius: 12px; position: relative;
+    }
+    .scroll-indicator .mouse::after {
+      content: ''; position: absolute; top: 6px; left: 50%; transform: translateX(-50%);
+      width: 3px; height: 8px; background: var(--accent); border-radius: 2px;
+      animation: mouseScroll 2s ease-in-out infinite;
+    }
+    @keyframes scrollBounce {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50% { transform: translateX(-50%) translateY(8px); }
+    }
+    @keyframes mouseScroll {
+      0%, 100% { opacity: 1; top: 6px; }
+      50% { opacity: 0.3; top: 18px; }
+    }
+
+    /* ============================================
+       What are PINNs
+    ============================================ */
+    .pinn-explainer { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: start; }
+    .pinn-text p { color: var(--text-secondary); margin-bottom: 1.1rem; font-size: 1.02rem; line-height: 1.8; }
+    .pinn-text p:last-child { margin-bottom: 0; }
+    .equation-box {
+      background: var(--bg-tertiary); border: 1px solid var(--glass-border);
+      border-radius: var(--radius); padding: 32px; margin-bottom: 24px;
+    }
+    .equation-box .eq-title {
+      font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1px;
+      color: var(--text-muted); margin-bottom: 16px; font-weight: 600;
+    }
+    .eq-line {
+      font-family: 'JetBrains Mono', monospace; font-size: 1rem;
+      color: var(--accent); margin-bottom: 8px; line-height: 1.6;
+    }
+    .eq-line span { color: var(--text-secondary); font-size: 0.85rem; margin-left: 12px; }
+    .eq-where {
+      margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--glass-border);
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .eq-where-item { font-size: 0.85rem; color: var(--text-muted); }
+    .eq-where-item strong { color: var(--text-secondary); font-family: 'JetBrains Mono', monospace; }
+    .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .compare-card {
+      padding: 24px; border-radius: var(--radius); border: 1px solid var(--glass-border);
+    }
+    .compare-card.fea { background: rgba(245, 158, 11, 0.05); border-color: rgba(245,158,11,0.15); }
+    .compare-card.pinn { background: rgba(0, 212, 255, 0.05); border-color: rgba(0,212,255,0.15); }
+    .compare-card h4 { font-size: 0.95rem; font-weight: 600; margin-bottom: 12px; }
+    .compare-card.fea h4 { color: var(--accent-orange); }
+    .compare-card.pinn h4 { color: var(--accent); }
+    .compare-item {
+      display: flex; gap: 10px; align-items: flex-start;
+      font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 8px;
+    }
+    .compare-item .dot {
+      width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 6px;
+    }
+    .fea .dot { background: var(--accent-orange); }
+    .pinn-card .dot { background: var(--accent); }
+
+    /* ============================================
+       Learning Path
+    ============================================ */
+    .phases { display: flex; flex-direction: column; gap: 0; }
+    .phase { display: grid; grid-template-columns: 200px 1fr; gap: 40px; padding: 48px 0; border-bottom: 1px solid var(--glass-border); }
+    .phase:last-child { border-bottom: none; }
+    .phase-left { position: sticky; top: 100px; align-self: start; }
+    .phase-number {
+      font-size: 3.5rem; font-weight: 800; line-height: 1;
+      background: linear-gradient(135deg, var(--accent), var(--accent-purple));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      margin-bottom: 8px;
+    }
+    .phase-name { font-size: 0.95rem; font-weight: 600; color: var(--text-primary); margin-bottom: 6px; }
+    .phase-desc-short { font-size: 0.82rem; color: var(--text-muted); line-height: 1.5; }
+    .phase-right { }
+    .phase-concept {
+      background: var(--bg-tertiary); border: 1px solid var(--glass-border);
+      border-radius: var(--radius); padding: 28px; margin-bottom: 24px;
+    }
+    .phase-concept h4 {
+      font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1px;
+      color: var(--accent); margin-bottom: 12px; font-weight: 600;
+    }
+    .phase-concept p { color: var(--text-secondary); font-size: 0.95rem; line-height: 1.75; }
+    .phase-concept p + p { margin-top: 10px; }
+    .phase-tools { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+
+    /* ============================================
+       Tool Cards
+    ============================================ */
+    .tool-card {
+      background: var(--glass-bg); border: 1px solid var(--glass-border);
+      border-radius: var(--radius); padding: 24px; display: flex; flex-direction: column;
+      transition: border-color var(--transition), background var(--transition), transform var(--transition), box-shadow var(--transition);
+    }
+    .tool-card:hover {
+      border-color: var(--glass-hover-border); background: var(--glass-hover-bg);
+      transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,212,255,0.08);
+    }
+    .tool-card-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; gap: 12px; }
+    .tool-card-name { font-size: 1rem; font-weight: 600; color: var(--text-primary); }
+    .tool-card-id { font-size: 0.75rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; margin-top: 2px; }
+    .status-badge {
+      padding: 3px 10px; border-radius: 50px; font-size: 0.72rem; font-weight: 600;
+      white-space: nowrap; flex-shrink: 0;
+    }
+    .status-complete { background: rgba(34,197,94,0.1); color: var(--accent-green); border: 1px solid rgba(34,197,94,0.2); }
+    .status-progress { background: rgba(0,212,255,0.1); color: var(--accent); border: 1px solid rgba(0,212,255,0.2); }
+    .status-soon { background: rgba(106,106,128,0.1); color: var(--text-muted); border: 1px solid rgba(106,106,128,0.2); }
+    .tool-card-concept {
+      font-size: 0.88rem; color: var(--text-muted); margin-bottom: 10px;
+      line-height: 1.6; font-style: italic;
+    }
+    .tool-card-desc { font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 16px; line-height: 1.65; flex: 1; }
+    .tool-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+    .tool-tag {
+      padding: 3px 10px; background: var(--accent-subtle);
+      border-radius: 50px; font-size: 0.75rem; color: var(--accent); font-weight: 500;
+    }
+    .tool-actions { display: flex; gap: 10px; margin-top: auto; }
+    .btn-launch {
+      flex: 1; padding: 9px 16px; background: var(--accent); color: var(--bg-primary);
+      font-size: 0.85rem; font-weight: 600; border-radius: 50px; text-align: center;
+      transition: transform var(--transition), box-shadow var(--transition);
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .btn-launch:hover { transform: translateY(-1px); box-shadow: 0 4px 16px var(--accent-glow); color: var(--bg-primary); }
+    .btn-launch.disabled {
+      background: var(--bg-tertiary); color: var(--text-muted); cursor: not-allowed;
+      pointer-events: none; border: 1px solid var(--glass-border);
+    }
+
+    /* ============================================
+       Pipeline
+    ============================================ */
+    .pipeline-wrap {
+      overflow-x: auto; padding-bottom: 16px;
+    }
+    .pipeline {
+      display: flex; align-items: stretch; gap: 0;
+      min-width: 900px; position: relative;
+    }
+    .pipeline-stage {
+      flex: 1; display: flex; flex-direction: column; align-items: center;
+      position: relative;
+    }
+    .pipeline-stage::after {
+      content: '→'; position: absolute; right: -14px; top: 50%;
+      transform: translateY(-50%); color: var(--accent); font-size: 1.4rem;
+      font-weight: 300; z-index: 2;
+    }
+    .pipeline-stage:last-child::after { display: none; }
+    .pipeline-node {
+      background: var(--bg-tertiary); border: 1px solid var(--glass-border);
+      border-radius: var(--radius); padding: 20px 16px; text-align: center;
+      width: 100%; transition: border-color var(--transition);
+    }
+    .pipeline-node:hover { border-color: var(--glass-hover-border); }
+    .pipeline-icon { font-size: 1.6rem; margin-bottom: 8px; }
+    .pipeline-node-title { font-size: 0.88rem; font-weight: 600; margin-bottom: 4px; }
+    .pipeline-node-sub { font-size: 0.75rem; color: var(--text-muted); }
+    .pipeline-tools-list {
+      margin-top: 10px; display: flex; flex-direction: column; gap: 4px;
+    }
+    .pipeline-tool-tag {
+      font-size: 0.7rem; font-family: 'JetBrains Mono', monospace;
+      color: var(--accent); background: var(--accent-subtle);
+      border-radius: 4px; padding: 2px 6px;
+    }
+
+    /* ============================================
+       MLOps Highlight
+    ============================================ */
+    .mlops-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
+    .mlops-text p { color: var(--text-secondary); font-size: 1.02rem; line-height: 1.8; margin-bottom: 1rem; }
+    .mlops-features { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px; }
+    .mlops-feature {
+      display: flex; align-items: flex-start; gap: 12px;
+      background: var(--glass-bg); border: 1px solid var(--glass-border);
+      border-radius: var(--radius-sm); padding: 16px;
+    }
+    .mlops-feature-icon {
+      width: 32px; height: 32px; border-radius: 8px;
+      background: var(--accent-subtle); display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; font-size: 0.9rem;
+    }
+    .mlops-feature-text h5 { font-size: 0.88rem; font-weight: 600; margin-bottom: 2px; }
+    .mlops-feature-text p { font-size: 0.8rem; color: var(--text-muted); margin: 0; line-height: 1.4; }
+    .mlops-card {
+      background: var(--bg-tertiary); border: 1px solid rgba(0,212,255,0.15);
+      border-radius: var(--radius); padding: 36px;
+    }
+    .mlops-card-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 8px; }
+    .mlops-card-sub { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 24px; }
+    .mlops-loop {
+      display: flex; flex-direction: column; gap: 0;
+    }
+    .mlops-loop-item {
+      display: flex; align-items: center; gap: 16px; padding: 12px 0;
+      border-bottom: 1px solid var(--glass-border);
+    }
+    .mlops-loop-item:last-child { border-bottom: none; }
+    .mlops-loop-num {
+      width: 28px; height: 28px; border-radius: 50%; background: var(--accent-subtle);
+      border: 1px solid rgba(0,212,255,0.2); display: flex; align-items: center;
+      justify-content: center; font-size: 0.75rem; font-weight: 700; color: var(--accent);
+      flex-shrink: 0;
+    }
+    .mlops-loop-text h5 { font-size: 0.9rem; font-weight: 600; margin-bottom: 2px; }
+    .mlops-loop-text p { font-size: 0.82rem; color: var(--text-muted); }
+
+    /* ============================================
+       Tech Stack
+    ============================================ */
+    .tech-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
+    .tech-card {
+      background: var(--glass-bg); border: 1px solid var(--glass-border);
+      border-radius: var(--radius-sm); padding: 20px; text-align: center;
+      transition: border-color var(--transition), transform var(--transition);
+    }
+    .tech-card:hover { border-color: var(--glass-hover-border); transform: translateY(-3px); }
+    .tech-card-icon { font-size: 1.8rem; margin-bottom: 8px; }
+    .tech-card-name { font-size: 0.9rem; font-weight: 600; margin-bottom: 4px; }
+    .tech-card-role { font-size: 0.78rem; color: var(--text-muted); }
+
+    /* ============================================
+       Footer
+    ============================================ */
+    .footer {
+      padding: 40px 0; border-top: 1px solid var(--glass-border);
+      text-align: center;
+    }
+    .footer-copy { color: var(--text-muted); font-size: 0.82rem; }
+
+    /* ============================================
+       Responsive
+    ============================================ */
+    @media (max-width: 900px) {
+      .pinn-explainer { grid-template-columns: 1fr; }
+      .phase { grid-template-columns: 1fr; gap: 24px; }
+      .phase-left { position: static; }
+      .mlops-grid { grid-template-columns: 1fr; }
+      .compare-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 768px) {
+      .section { padding: 72px 0; }
+      .nav-links {
+        position: fixed; top: 0; right: -100%; width: 70%; max-width: 300px;
+        height: 100vh; background: rgba(12,12,20,0.97); backdrop-filter: blur(20px);
+        flex-direction: column; padding: 80px 32px 32px; gap: 24px;
+        transition: right var(--transition); border-left: 1px solid var(--glass-border);
+      }
+      .nav-links.open { right: 0; }
+      .hamburger { display: flex; z-index: 1001; }
+      .hero-stats { gap: 10px; }
+      .mlops-features { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 480px) {
+      .container { padding: 0 16px; }
+      .hero-title { font-size: 2.2rem; }
+      .hero-ctas { flex-direction: column; }
+      .btn-primary, .btn-secondary { justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== NAV ===== -->
+  <nav class="navbar">
+    <div class="container">
+      <a href="#" class="nav-logo">pinn<span>.</span></a>
+      <ul class="nav-links">
+        <li><a href="#learn">What is PINN</a></li>
+        <li><a href="#path">Learning Path</a></li>
+        <li><a href="#pipeline">Pipeline</a></li>
+        <li><a href="#mlops">MLOps</a></li>
+      </ul>
+      <button class="hamburger" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ===== HERO ===== -->
+  <section class="hero" id="hero">
+    <div class="hero-bg"></div>
+    <div class="container">
+      <div class="hero-content">
+        <div class="hero-eyebrow">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
+          Physics-Informed Neural Networks
+        </div>
+        <h1 class="hero-title">
+          Learn the Physics.<br/>
+          <span class="highlight">Build the Tools.</span><br/>
+          Deploy to Production.
+        </h1>
+        <p class="hero-subtitle">
+          A complete PINN toolkit — from understanding why neural networks can solve PDEs,
+          to building production-grade surrogates, diagnostics, digital twins, and a full MLOps platform
+          designed specifically for physics-informed ML.
+        </p>
+        <div class="hero-stats">
+          <div class="hero-stat">
+            <span class="hero-stat-num">14</span>
+            <span class="hero-stat-label">Interactive Tools</span>
+          </div>
+          <div class="hero-stat">
+            <span class="hero-stat-num">5</span>
+            <span class="hero-stat-label">Learning Phases</span>
+          </div>
+          <div class="hero-stat">
+            <span class="hero-stat-num">E2E</span>
+            <span class="hero-stat-label">ML Pipeline</span>
+          </div>
+          <div class="hero-stat">
+            <span class="hero-stat-num">CAE + AI</span>
+            <span class="hero-stat-label">Domain Focus</span>
+          </div>
+        </div>
+        <div class="hero-ctas">
+          <a href="#learn" class="btn-primary">
+            Start Learning
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+          </a>
+          <a href="#path" class="btn-secondary">
+            Explore Tools
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+    <div class="scroll-indicator">
+      <div class="mouse"></div>
+      <span>Scroll</span>
+    </div>
+  </section>
+
+  <!-- ===== WHAT ARE PINNs ===== -->
+  <section class="section section-alt" id="learn">
+    <div class="container">
+      <div class="section-label">
+        <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+        Foundations
+      </div>
+      <h2 class="section-title fade-in">What are PINNs?</h2>
+      <p class="section-subtitle fade-in">Understanding the core idea before building with it.</p>
+
+      <div class="pinn-explainer fade-in">
+        <div class="pinn-text">
+          <p>
+            A <strong style="color: var(--text-primary);">Physics-Informed Neural Network (PINN)</strong> is a neural network
+            that doesn't just learn from data — it learns to obey physical laws simultaneously. Those laws,
+            expressed as Partial Differential Equations (PDEs), are embedded directly into the training loss.
+          </p>
+          <p>
+            Standard neural networks minimise error on labelled data. PINNs add an additional penalty every
+            time the network's output violates the governing physics — the heat equation, Navier-Stokes,
+            elasticity equations, or any PDE you care about.
+          </p>
+          <p>
+            The result: a network that generalises with far less data than a pure ML model,
+            respects physical constraints by construction, and can solve or approximate PDEs
+            without ever generating a computational mesh.
+          </p>
+
+          <div class="equation-box" style="margin-top: 28px;">
+            <div class="eq-title">PINN Training Objective</div>
+            <div class="eq-line">L = L<sub>data</sub> + λ<sub>pde</sub>·L<sub>physics</sub> + λ<sub>bc</sub>·L<sub>boundary</sub> + λ<sub>ic</sub>·L<sub>initial</sub></div>
+            <div class="eq-where">
+              <div class="eq-where-item"><strong>L_data</strong> — error on observed measurements or simulation outputs</div>
+              <div class="eq-where-item"><strong>L_physics</strong> — PDE residual: how much the output violates the governing equation</div>
+              <div class="eq-where-item"><strong>L_boundary</strong> — boundary condition violations</div>
+              <div class="eq-where-item"><strong>λ</strong> — learnable or tuned loss weights balancing each term</div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="compare-grid" style="margin-bottom: 24px;">
+            <div class="compare-card fea">
+              <h4>Traditional FEA</h4>
+              <div class="compare-item"><div class="dot"></div>Geometry → Mesh → Assemble → Solve</div>
+              <div class="compare-item"><div class="dot"></div>Minutes to hours per simulation run</div>
+              <div class="compare-item"><div class="dot"></div>Infeasible for thousands of design variants</div>
+              <div class="compare-item"><div class="dot"></div>Requires meshing expertise</div>
+              <div class="compare-item"><div class="dot"></div>Cannot assimilate live sensor data easily</div>
+            </div>
+            <div class="compare-card pinn">
+              <h4>PINN Surrogate</h4>
+              <div class="compare-item"><div class="dot" style="background:var(--accent)"></div>Train once on small dataset (50–200 runs)</div>
+              <div class="compare-item"><div class="dot" style="background:var(--accent)"></div>Inference in milliseconds</div>
+              <div class="compare-item"><div class="dot" style="background:var(--accent)"></div>Explore thousands of designs instantly</div>
+              <div class="compare-item"><div class="dot" style="background:var(--accent)"></div>Mesh-free — works in arbitrary domains</div>
+              <div class="compare-item"><div class="dot" style="background:var(--accent)"></div>Assimilates sensor data via inverse problems</div>
+            </div>
+          </div>
+
+          <div class="glass" style="padding: 24px;">
+            <div style="font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 16px; font-weight: 600;">Where PINNs shine</div>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+              <div style="display: flex; gap: 12px; align-items: flex-start; font-size: 0.9rem; color: var(--text-secondary);">
+                <span style="color: var(--accent); font-weight: 700; flex-shrink: 0;">→</span>
+                <span><strong style="color: var(--text-primary);">Design space exploration</strong> — sweep thousands of parameter combinations at FEA accuracy, millisecond speed</span>
+              </div>
+              <div style="display: flex; gap: 12px; align-items: flex-start; font-size: 0.9rem; color: var(--text-secondary);">
+                <span style="color: var(--accent); font-weight: 700; flex-shrink: 0;">→</span>
+                <span><strong style="color: var(--text-primary);">Inverse problems</strong> — identify unknown material properties or boundary conditions from sparse sensor data</span>
+              </div>
+              <div style="display: flex; gap: 12px; align-items: flex-start; font-size: 0.9rem; color: var(--text-secondary);">
+                <span style="color: var(--accent); font-weight: 700; flex-shrink: 0;">→</span>
+                <span><strong style="color: var(--text-primary);">Digital twins</strong> — continuously update a physics model as live sensor streams arrive</span>
+              </div>
+              <div style="display: flex; gap: 12px; align-items: flex-start; font-size: 0.9rem; color: var(--text-secondary);">
+                <span style="color: var(--accent); font-weight: 700; flex-shrink: 0;">→</span>
+                <span><strong style="color: var(--text-primary);">Sparse data regimes</strong> — physical constraints regularise the network where data is scarce</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== LEARNING PATH + TOOLS ===== -->
+  <section class="section" id="path">
+    <div class="container">
+      <div class="section-label">
+        <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+        Structured Learning
+      </div>
+      <h2 class="section-title fade-in">Learning Path + Tools</h2>
+      <p class="section-subtitle fade-in">
+        Five phases from data generation to autonomous agentic systems.
+        Each phase teaches a core concept and gives you a live tool to apply it.
+      </p>
+
+      <div class="phases">
+
+        <!-- PHASE 1 -->
+        <div class="phase fade-in">
+          <div class="phase-left">
+            <div class="phase-number">01</div>
+            <div class="phase-name">Data Foundation</div>
+            <div class="phase-desc-short">Generate physics-accurate training data using FEM simulation</div>
+          </div>
+          <div class="phase-right">
+            <div class="phase-concept">
+              <h4>The Concept</h4>
+              <p>
+                PINNs need high-quality physics data to learn from. That data comes from Finite Element Method (FEM)
+                solvers — programs that numerically solve PDEs on a discretised mesh. Understanding how FEM
+                works and what it produces is the first step toward replacing it with a surrogate.
+              </p>
+              <p>
+                This phase covers: what a PDE is, how FEniCSx solves structural mechanics problems,
+                what parametric sweeps look like, and how to structure simulation outputs into a
+                clean training dataset for downstream PINN training.
+              </p>
+            </div>
+            <div class="phase-tools">
+
+              <div class="tool-card">
+                <div class="tool-card-header">
+                  <div>
+                    <div class="tool-card-name">FEniCSx Data Generator</div>
+                    <div class="tool-card-id">04_fenicsx_data</div>
+                  </div>
+                  <span class="status-badge status-complete">Complete</span>
+                </div>
+                <div class="tool-card-concept">Learn: How FEM generates ground-truth physics data</div>
+                <div class="tool-card-desc">
+                  Parametric FEM simulation of a cantilever beam under varying loads, thicknesses, and materials
+                  using FEniCSx. Generates a structured CSV dataset (stress, displacement fields) for surrogate training.
+                  Run simulations, visualise stress fields via PyVista, and export training-ready data.
+                </div>
+                <div class="tool-tags">
+                  <span class="tool-tag">FEniCSx</span>
+                  <span class="tool-tag">PyVista</span>
+                  <span class="tool-tag">FEM</span>
+                  <span class="tool-tag">Python</span>
+                </div>
+                <div class="tool-actions">
+                  <a href="#" class="btn-launch disabled">Coming Soon</a>
+                </div>
+              </div>
+
+              <div class="tool-card">
+                <div class="tool-card-header">
+                  <div>
+                    <div class="tool-card-name">PINN Learning Hub</div>
+                    <div class="tool-card-id">00_pinn_learning</div>
+                  </div>
+                  <span class="status-badge status-soon">Coming Soon</span>
+                </div>
+                <div class="tool-card-concept">Learn: PINN theory from first principles</div>
+                <div class="tool-card-desc">
+                  Structured curriculum covering PINN mathematics, PDE types (elliptic, parabolic, hyperbolic),
+                  loss function design, and canonical benchmark problems. Interactive notebooks with
+                  step-by-step derivations and live code execution.
+                </div>
+                <div class="tool-tags">
+                  <span class="tool-tag">DeepXDE</span>
+                  <span class="tool-tag">PyTorch</span>
+                  <span class="tool-tag">Notebooks</span>
+                </div>
+                <div class="tool-actions">
+                  <a href="#" class="btn-launch disabled">Coming Soon</a>
+                </div>
+              </div>
+
+              <div class="tool-card">
+                <div class="tool-card-header">
+                  <div>
+                    <div class="tool-card-name">NanoPINN</div>
+                    <div class="tool-card-id">08_nanopinn</div>
+                  </div>
+                  <span class="status-badge status-soon">Coming Soon</span>
+                </div>
+                <div class="tool-card-concept">Learn: PINNs from scratch in ~500 lines</div>
+                <div class="tool-card-desc">
+                  Karpathy-style minimal PyTorch PINN reference implementation covering 5 canonical PDEs
+                  (Poisson, Burgers, heat, wave, Navier-Stokes). No frameworks — pure PyTorch to build
+                  deep intuition for how PINNs actually work.
+                </div>
+                <div class="tool-tags">
+                  <span class="tool-tag">PyTorch</span>
+                  <span class="tool-tag">Minimal</span>
+                  <span class="tool-tag">5 PDEs</span>
+                </div>
+                <div class="tool-actions">
+                  <a href="#" class="btn-launch disabled">Coming Soon</a>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- PHASE 2 -->
+        <div class="phase fade-in">
+          <div class="phase-left">
+            <div class="phase-number">02</div>
+            <div class="phase-name">Surrogate Training</div>
+            <div class="phase-desc-short">Train, diagnose, and tune neural surrogates for physics problems</div>
+          </div>
+          <div class="phase-right">
+            <div class="phase-concept">
+              <h4>The Concept</h4>
+              <p>
+                A surrogate model is a neural network trained to approximate a physics simulator.
+                The challenge is not just building the network — it's knowing when training is working,
+                where it's failing, and how to fix it. PINN training behaves very differently from
+                standard supervised learning: losses can plateau, boundary conditions can dominate,
+                and collocation point distribution matters enormously.
+              </p>
+              <p>
+                This phase teaches: neural surrogate architecture design, PINN-specific loss diagnostics,
+                adaptive collocation strategies for hard-to-learn regions, and hyperparameter search
+                with physics-aware priors.
+              </p>
+            </div>
+            <div class="phase-tools">
+
+              <div class="tool-card">
+                <div class="tool-card-header">
+                  <div>
+                    <div class="tool-card-name">CAE Surrogate Pipeline</div>
+                    <div class="tool-card-id">03_pinnsurrogate</div>
+                  </div>
+                  <span class="status-badge status-complete">Complete</span>
+                </div>
+                <div class="tool-card-concept">Learn: End-to-end surrogate training and evaluation</div>
+                <div class="tool-card-desc">
+                  Full pipeline: FEniCSx data → PyTorch neural surrogate → REST API + interactive design explorer.
+                  Predicts von Mises stress and displacement 10,000× faster than FEA.
+                  Achieved R²=0.999 with only 40 training samples.
+                </div>
+                <div class="tool-tags">
+                  <span class="tool-tag">PyTorch</span>
+                  <span class="tool-tag">FastAPI</span>
+                  <span class="tool-tag">Streamlit</span>
+                  <span class="tool-tag">Plotly</span>
+                </div>
+                <div class="tool-actions">
+                  <a href="#" class="btn-launch">Launch App →</a>
+                </div>
+              </div>
+
+              <div class="tool-card">
+                <div class="tool-card-header">
+                  <div>
+                    <div class="tool-card-name">PINN Diagnostics Dashboard</div>
+                    <div class="tool-card-id">06_pinn_diagnostics</div>
+                  </div>
+                  <span class="status-badge status-progress">In Progress</span>
+                </div>
+                <div class="tool-card-concept">Learn: How to interpret PINN training dynamics</div>
+                <div class="tool-card-desc">
+                  Zero-infrastructure training monitor with physics-aware insight. Tracks per-component loss
+                  (PDE, BC, IC, data), residual spatial maps, gradient flow, and convergence signals that
+                  standard tools like W&B miss. Plug in with two lines of Python.
+                </div>
+                <div class="tool-tags">
+                  <span class="tool-tag">Streamlit</span>
+                  <span class="tool-tag">Plotly</span>
+                  <span class="tool-tag">PyTorch</span>
+                </div>
+                <div class="tool-actions">
+                  <a href="#" class="btn-launch disabled">Coming Soon</a>
+                </div>
+              </div>
+
+              <div class="tool-card">
+                <div class="tool-card-header">
+                  <div>
+                    <div class="tool-card-name">Adaptive Collocation Sampler</div>
+                    <div class="tool-card-id">07_adaptive_sampler</div>
+                  </div>
+                  <span class="status-badge status-soon">Coming Soon</span>
+                </div>
+                <div class="tool-card-concept">Learn: Why collocation point placement matters</div>
+                <div class="tool-card-desc">
+                  Dynamically concentrates training points in high-residual regions (RAR, RAD strategies).
+                  Dramatically improves convergence on problems with sharp gradients or multiscale features.
+                  Benchmarked against uniform sampling on canonical PINN problems.
+                </div>
+                <div class="tool-tags">
+                  <span class="tool-tag">PyTorch</span>
+                  <span class="tool-tag">DeepXDE</span>
+                  <span class="tool-tag">NumPy</span>
+                </div>
+                <div class="tool-actions">
+                  <a href="#" class="btn-launch disabled">Coming Soon</a>
+                </div>
+              </div>
+
+              <div class="tool-card">
+                <div class="tool-card-header">
+                  <div>
+                    <div class="tool-card-name">Hyperparameter Optimizer</div>
+                    <div class="tool-card-id">09_hyperparam_optimizer</div>
+                  </div>
+                  <span class="status-badge status-soon">Coming Soon</span>
+                </div>
+                <div class="tool-card-concept">Learn: PINN-specific hyperparameter search strategies</div>
+                <div class="tool-card-desc">
+                  Optimises architecture, loss weights (λ_pde, λ_bc, λ_ic), learning rate schedule, and
+                  collocation density jointly. Knows that tanh/sin outperform ReLU for PINNs.
+                  Early stopping based on physics residual plateau, not just total loss.
+                </div>
+                <div class="tool-tags">
+                  <span class="tool-tag">Optuna</span>
+                  <span class="tool-tag">MLflow</span>
+                  <span class="tool-tag">PyTorch</span>
+                </div>
+                <div class="tool-actions">
+                  <a href="#" class="btn-launch disabled">Coming Soon</a>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- PHASE 3 -->
+        <div class="phase fade-in">
+          <div class="phase-left">
+            <div class="phase-number">03</div>
+            <div class="phase-name">Problem Formulation</div>
+            <div class="phase-desc-short">Translate physics problems into PINN configs from any input</div>
+          </div>
+          <div class="phase-right">
+            <div class="phase-concept">
+              <h4>The Concept</h4>
+              <p>
+                The hardest part of applying PINNs in practice is not training — it's formulation.
+                Translating a real engineering problem into the right PDE, boundary conditions, collocation
+                strategy, and network architecture requires deep domain knowledge that most ML engineers lack.
+              </p>
+              <p>
+                This phase bridges that gap using LLM agents and RAG. Whether you start from a natural language
+                problem description, an ANSYS model file, or a research question, these tools generate executable
+                PINN configurations and surface the most relevant literature to support your choices.
+              </p>
+            </div>
+            <div class="phase-tools">
+
+              <div class="tool-card">
+                <div class="tool-card-header">
+                  <div>
+                    <div class="tool-card-name">PINN Problem Formulator</div>
+                    <div class="tool-card-id">05_pinn_formulator</div>
+                  </div>
+                  <span class="status-badge status-soon">Coming Soon</span>
+                </div>
+                <div class="tool-card-concept">Learn: How LLM agents translate physics to PINN configs</div>
+                <div class="tool-card-desc">
+                  Describe your physics problem in plain English. An LLM agent identifies the governing PDE,
+                  generates a DeepXDE training configuration, executes training in a sandbox,
+                  and returns solution field plots with convergence diagnostics.
+                </div>
+                <div class="tool-tags">
+                  <span class="tool-tag">LLM Agent</span>
+                  <span class="tool-tag">DeepXDE</span>
+                  <span class="tool-tag">RAG</span>
+                  <span class="tool-tag">Streamlit</span>
+                </div>
+                <div class="tool-actions">
+                  <a href="#" class="btn-launch disabled">Coming Soon</a>
+                </div>
+              </div>
+
+              <div class="tool-card">
+                <div class="tool-card-header">
+                  <div>
+                    <div class="tool-card-name">CAE-to-PINN Bridge</div>
+                    <div class="tool-card-id">10_cae_bridge</div>
+                  </div>
+                  <span class="status-badge status-soon">Coming Soon</span>
+                </div>
+                <div class="tool-card-concept">Learn: How to connect existing CAE workflows to PINNs</div>
+                <div class="tool-card-desc">
+                  Upload ANSYS, COMSOL, or Abaqus model files. An LLM agent parses boundary conditions,
+                  material properties, and load cases — then auto-generates a complete PINN training
+                  configuration. Closes the knowledge gap between CAE and ML engineers.
+                </div>
+                <div class="tool-tags">
+                  <span class="tool-tag">LLM Agent</span>
+                  <span class="tool-tag">ANSYS</span>
+                  <span class="tool-tag">COMSOL</span>
+                  <span class="tool-tag">FastAPI</span>
+                </div>
+                <div class="tool-actions">
+                  <a href="#" class="btn-launch disabled">Coming Soon</a>
+                </div>
+              </div>
+
+              <div class="tool-card">
+                <div class="tool-card-header">
+                  <div>
+                    <div class="tool-card-name">Literature Copilot</div>
+                    <div class="tool-card-id">12_literature_copilot</div>
+                  </div>
+                  <span class="status-badge status-soon">Coming Soon</span>
+                </div>
+                <div class="tool-card-concept">Learn: What the research community knows about your problem</div>
+                <div class="tool-card-desc">
+                  RAG system over 5,000+ PINN papers. Ask "What architecture works best for sparse
+                  Navier-Stokes?" or "Which loss weighting strategy for stiff PDEs?" and get cited,
+                  grounded answers with architecture recommendations and training strategies.
+                </div>
+                <div class="tool-tags">
+                  <span class="tool-tag">RAG</span>
+                  <span class="tool-tag">ChromaDB</span>
+                  <span class="tool-tag">Streamlit</span>
+                  <span class="tool-tag">LLM</span>
+                </div>
+                <div class="tool-actions">
+                  <a href="#" class="btn-launch disabled">Coming Soon</a>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- PHASE 4 -->
+        <div class="phase fade-in">
+          <div class="phase-left">
+            <div class="phase-number">04</div>
+            <div class="phase-name">Production Deployment</div>
+            <div class="phase-desc-short">Serve trained PINN models with physics validation at scale</div>
+          </div>
+          <div class="phase-right">
+            <div class="phase-concept">
+              <h4>The Concept</h4>
+              <p>
+                Deploying a PINN surrogate is not the same as deploying a standard ML model.
+                You need to guard against predictions that are fast but physically nonsensical —
+                negative temperatures, stress fields that violate equilibrium, displacement
+                gradients that breach material limits. Physics validation hooks catch these at the
+                inference boundary before they reach downstream systems.
+              </p>
+              <p>
+                This phase covers: ONNX export for fast inference, FastAPI REST endpoint design,
+                physics constraint checking, latency benchmarking, and multi-model routing.
+              </p>
+            </div>
+            <div class="phase-tools">
+
+              <div class="tool-card">
+                <div class="tool-card-header">
+                  <div>
+                    <div class="tool-card-name">PINN Serving Runtime</div>
+                    <div class="tool-card-id">11_serving_runtime</div>
+                  </div>
+                  <span class="status-badge status-soon">Coming Soon</span>
+                </div>
+                <div class="tool-card-concept">Learn: Production-grade inference with physics guardrails</div>
+                <div class="tool-card-desc">
+                  Exports trained PyTorch PINNs to ONNX. FastAPI REST endpoint for surrogate predictions
+                  with physics validation hooks — rejects outputs violating known physical bounds.
+                  Includes latency benchmarking, throughput monitoring, and Docker packaging.
+                </div>
+                <div class="tool-tags">
+                  <span class="tool-tag">FastAPI</span>
+                  <span class="tool-tag">ONNX</span>
+                  <span class="tool-tag">Docker</span>
+                  <span class="tool-tag">PyTorch</span>
+                </div>
+                <div class="tool-actions">
+                  <a href="#" class="btn-launch disabled">Coming Soon</a>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- PHASE 5 -->
+        <div class="phase fade-in">
+          <div class="phase-left">
+            <div class="phase-number">05</div>
+            <div class="phase-name">Agentic AI Systems</div>
+            <div class="phase-desc-short">Autonomous PINN systems that perceive, decide, and act</div>
+          </div>
+          <div class="phase-right">
+            <div class="phase-concept">
+              <h4>The Concept</h4>
+              <p>
+                The most powerful PINN applications are not static models — they are autonomous agents
+                that continuously monitor physical systems, identify unknown parameters from sensor streams,
+                route queries intelligently between fast surrogates and accurate solvers, and
+                self-repair when their predictions drift from ground truth.
+              </p>
+              <p>
+                This phase explores four agentic architectures: inverse identification agents, multi-fidelity
+                routing agents, continuous digital twin agents, and self-healing surrogate systems — each
+                combining PINN models with LLM reasoning and automated decision loops.
+              </p>
+            </div>
+            <div class="phase-tools">
+
+              <div class="tool-card">
+                <div class="tool-card-header">
+                  <div>
+                    <div class="tool-card-name">Autonomous Inverse Solver</div>
+                    <div class="tool-card-id">13_inverse_solver</div>
+                  </div>
+                  <span class="status-badge status-soon">Coming Soon</span>
+                </div>
+                <div class="tool-card-concept">Learn: Identifying unknown physics from measurements</div>
+                <div class="tool-card-desc">
+                  Upload sparse sensor data. An agent hypothesises governing PDEs, trains an inverse PINN
+                  to identify unknown parameters (viscosity, conductivity, stiffness), validates against
+                  held-out measurements, and reports estimates with uncertainty bounds.
+                </div>
+                <div class="tool-tags">
+                  <span class="tool-tag">Inverse PINN</span>
+                  <span class="tool-tag">LLM Agent</span>
+                  <span class="tool-tag">PyTorch</span>
+                </div>
+                <div class="tool-actions">
+                  <a href="#" class="btn-launch disabled">Coming Soon</a>
+                </div>
+              </div>
+
+              <div class="tool-card">
+                <div class="tool-card-header">
+                  <div>
+                    <div class="tool-card-name">Multi-Fidelity Orchestrator</div>
+                    <div class="tool-card-id">14_multifidelity_orchestrator</div>
+                  </div>
+                  <span class="status-badge status-soon">Coming Soon</span>
+                </div>
+                <div class="tool-card-concept">Learn: Intelligent routing between speed and accuracy</div>
+                <div class="tool-card-desc">
+                  Submit a design query with accuracy and time budget. The agent estimates whether the PINN
+                  surrogate is within tolerance, routes to surrogate (milliseconds) or full FEM solver (minutes),
+                  and triggers retraining when queries fall outside training distribution.
+                </div>
+                <div class="tool-tags">
+                  <span class="tool-tag">Routing Agent</span>
+                  <span class="tool-tag">FEniCSx</span>
+                  <span class="tool-tag">FastAPI</span>
+                </div>
+                <div class="tool-actions">
+                  <a href="#" class="btn-launch disabled">Coming Soon</a>
+                </div>
+              </div>
+
+              <div class="tool-card">
+                <div class="tool-card-header">
+                  <div>
+                    <div class="tool-card-name">Digital Twin Agent</div>
+                    <div class="tool-card-id">15_digital_twin_agent</div>
+                  </div>
+                  <span class="status-badge status-soon">Coming Soon</span>
+                </div>
+                <div class="tool-card-concept">Learn: Continuous physics-based asset monitoring</div>
+                <div class="tool-card-desc">
+                  Ingest live sensor streams (temperature, strain, pressure). The agent updates the PINN
+                  surrogate state via inverse solving, answers real-time what-if queries, and flags
+                  behaviour violating governing equations with LLM-generated human-readable alerts.
+                </div>
+                <div class="tool-tags">
+                  <span class="tool-tag">Digital Twin</span>
+                  <span class="tool-tag">Streaming</span>
+                  <span class="tool-tag">LLM</span>
+                  <span class="tool-tag">Inverse PINN</span>
+                </div>
+                <div class="tool-actions">
+                  <a href="#" class="btn-launch disabled">Coming Soon</a>
+                </div>
+              </div>
+
+              <div class="tool-card">
+                <div class="tool-card-header">
+                  <div>
+                    <div class="tool-card-name">Self-Healing Surrogate</div>
+                    <div class="tool-card-id">16_self_healing_surrogate</div>
+                  </div>
+                  <span class="status-badge status-soon">Coming Soon</span>
+                </div>
+                <div class="tool-card-concept">Learn: Autonomous model maintenance post-deployment</div>
+                <div class="tool-card-desc">
+                  Monitors deployed surrogate predictions against incoming ground truth. Detects distribution
+                  shift automatically, triggers fine-tuning or full retraining, A/B tests the updated model
+                  against production, and promotes only when validation passes.
+                </div>
+                <div class="tool-tags">
+                  <span class="tool-tag">Drift Detection</span>
+                  <span class="tool-tag">A/B Testing</span>
+                  <span class="tool-tag">MLflow</span>
+                  <span class="tool-tag">PyTorch</span>
+                </div>
+                <div class="tool-actions">
+                  <a href="#" class="btn-launch disabled">Coming Soon</a>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== PIPELINE ===== -->
+  <section class="section section-alt" id="pipeline">
+    <div class="container">
+      <div class="section-label">
+        <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        End-to-End
+      </div>
+      <h2 class="section-title fade-in">The Complete Pipeline</h2>
+      <p class="section-subtitle fade-in">
+        Every tool in this toolkit occupies a specific stage. Together they form a complete
+        PINN ML pipeline — from raw physics to live autonomous monitoring.
+      </p>
+
+      <div class="pipeline-wrap fade-in">
+        <div class="pipeline">
+          <div class="pipeline-stage">
+            <div class="pipeline-node">
+              <div class="pipeline-icon">⚙️</div>
+              <div class="pipeline-node-title">Data Generation</div>
+              <div class="pipeline-node-sub">FEM Simulation</div>
+              <div class="pipeline-tools-list">
+                <span class="pipeline-tool-tag">04_fenicsx_data</span>
+              </div>
+            </div>
+          </div>
+          <div class="pipeline-stage">
+            <div class="pipeline-node">
+              <div class="pipeline-icon">🧠</div>
+              <div class="pipeline-node-title">Surrogate Training</div>
+              <div class="pipeline-node-sub">PINN + Neural Net</div>
+              <div class="pipeline-tools-list">
+                <span class="pipeline-tool-tag">03_pinnsurrogate</span>
+                <span class="pipeline-tool-tag">07_adaptive_sampler</span>
+                <span class="pipeline-tool-tag">09_hyperparam_optimizer</span>
+              </div>
+            </div>
+          </div>
+          <div class="pipeline-stage">
+            <div class="pipeline-node">
+              <div class="pipeline-icon">📊</div>
+              <div class="pipeline-node-title">Diagnostics</div>
+              <div class="pipeline-node-sub">Physics-Aware Monitoring</div>
+              <div class="pipeline-tools-list">
+                <span class="pipeline-tool-tag">06_pinn_diagnostics</span>
+              </div>
+            </div>
+          </div>
+          <div class="pipeline-stage">
+            <div class="pipeline-node">
+              <div class="pipeline-icon">🚀</div>
+              <div class="pipeline-node-title">Serving</div>
+              <div class="pipeline-node-sub">ONNX + FastAPI</div>
+              <div class="pipeline-tools-list">
+                <span class="pipeline-tool-tag">11_serving_runtime</span>
+              </div>
+            </div>
+          </div>
+          <div class="pipeline-stage">
+            <div class="pipeline-node">
+              <div class="pipeline-icon">🤖</div>
+              <div class="pipeline-node-title">Agentic Systems</div>
+              <div class="pipeline-node-sub">Digital Twins + Inverse</div>
+              <div class="pipeline-tools-list">
+                <span class="pipeline-tool-tag">13_inverse_solver</span>
+                <span class="pipeline-tool-tag">14_multifidelity</span>
+                <span class="pipeline-tool-tag">15_digital_twin</span>
+              </div>
+            </div>
+          </div>
+          <div class="pipeline-stage">
+            <div class="pipeline-node">
+              <div class="pipeline-icon">🔄</div>
+              <div class="pipeline-node-title">MLOps</div>
+              <div class="pipeline-node-sub">Full Lifecycle</div>
+              <div class="pipeline-tools-list">
+                <span class="pipeline-tool-tag">17_pinn_mlops</span>
+                <span class="pipeline-tool-tag">16_self_healing</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="glass fade-in" style="padding: 28px; margin-top: 32px; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 24px;">
+        <div>
+          <div style="font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); font-weight: 600; margin-bottom: 10px;">Formulation Helpers</div>
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <div style="font-size: 0.88rem; color: var(--text-secondary);">→ <span style="color: var(--accent); font-family: monospace; font-size: 0.82rem;">05_pinn_formulator</span> — NLP → PINN config</div>
+            <div style="font-size: 0.88rem; color: var(--text-secondary);">→ <span style="color: var(--accent); font-family: monospace; font-size: 0.82rem;">10_cae_bridge</span> — CAE file → PINN config</div>
+            <div style="font-size: 0.88rem; color: var(--text-secondary);">→ <span style="color: var(--accent); font-family: monospace; font-size: 0.82rem;">12_literature_copilot</span> — Research Q&A</div>
+          </div>
+        </div>
+        <div>
+          <div style="font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); font-weight: 600; margin-bottom: 10px;">Entry Points</div>
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <div style="font-size: 0.88rem; color: var(--text-secondary);">Natural language → <span style="color: var(--accent);">05_pinn_formulator</span></div>
+            <div style="font-size: 0.88rem; color: var(--text-secondary);">CAE file → <span style="color: var(--accent);">10_cae_bridge</span></div>
+            <div style="font-size: 0.88rem; color: var(--text-secondary);">Raw physics → <span style="color: var(--accent);">04_fenicsx_data</span></div>
+          </div>
+        </div>
+        <div>
+          <div style="font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); font-weight: 600; margin-bottom: 10px;">Exit Points</div>
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <div style="font-size: 0.88rem; color: var(--text-secondary);">REST API → <span style="color: var(--accent);">11_serving_runtime</span></div>
+            <div style="font-size: 0.88rem; color: var(--text-secondary);">Digital twin → <span style="color: var(--accent);">15_digital_twin</span></div>
+            <div style="font-size: 0.88rem; color: var(--text-secondary);">PyPI library → <span style="color: var(--accent);">07, 09 modules</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== MLOPS ===== -->
+  <section class="section" id="mlops">
+    <div class="container">
+      <div class="section-label">
+        <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+        MLOps for PINNs
+      </div>
+      <h2 class="section-title fade-in">PINN MLOps Platform</h2>
+      <p class="section-subtitle fade-in">
+        Generic MLOps tools don't understand physics residuals, PDE violations, or multi-component
+        PINN losses. This platform is built specifically for the physics-informed ML lifecycle.
+      </p>
+
+      <div class="mlops-grid fade-in">
+        <div class="mlops-text">
+          <p>
+            <strong style="color: var(--text-primary);">17_pinn_mlops_platform</strong> ties together every tool in this toolkit
+            under a single orchestration layer. It manages the complete model lifecycle — from
+            experiment tracking and model registry to automated retraining, A/B testing, and promotion.
+          </p>
+          <p>
+            Unlike W&B or MLflow, it understands what a PINN loss curve should look like,
+            can detect PDE residual plateaus, tracks per-boundary-condition performance separately,
+            and knows when a model is "physically valid" vs just "low MSE."
+          </p>
+
+          <div class="mlops-features" style="margin-top: 24px;">
+            <div class="mlops-feature">
+              <div class="mlops-feature-icon">📦</div>
+              <div class="mlops-feature-text">
+                <h5>Model Registry</h5>
+                <p>Version and compare trained PINN models</p>
+              </div>
+            </div>
+            <div class="mlops-feature">
+              <div class="mlops-feature-icon">🔬</div>
+              <div class="mlops-feature-text">
+                <h5>Experiment Tracking</h5>
+                <p>Physics-aware run comparison (wraps MLflow)</p>
+              </div>
+            </div>
+            <div class="mlops-feature">
+              <div class="mlops-feature-icon">💾</div>
+              <div class="mlops-feature-text">
+                <h5>Data Versioning</h5>
+                <p>Track FEniCSx dataset → model lineage</p>
+              </div>
+            </div>
+            <div class="mlops-feature">
+              <div class="mlops-feature-icon">🔗</div>
+              <div class="mlops-feature-text">
+                <h5>Pipeline Orchestration</h5>
+                <p>Chain all toolkit stages as one pipeline</p>
+              </div>
+            </div>
+            <div class="mlops-feature">
+              <div class="mlops-feature-icon">📉</div>
+              <div class="mlops-feature-text">
+                <h5>Drift Detection</h5>
+                <p>Physics-residual-based drift signals</p>
+              </div>
+            </div>
+            <div class="mlops-feature">
+              <div class="mlops-feature-icon">⚗️</div>
+              <div class="mlops-feature-text">
+                <h5>A/B Testing</h5>
+                <p>Physics-validated model promotion</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mlops-card">
+          <div class="mlops-card-title">17_pinn_mlops_platform</div>
+          <div class="mlops-card-sub">The autonomous model lifecycle loop</div>
+          <div class="mlops-loop">
+            <div class="mlops-loop-item">
+              <div class="mlops-loop-num">1</div>
+              <div class="mlops-loop-text">
+                <h5>New data arrives</h5>
+                <p>FEniCSx runs or sensor measurements trigger pipeline</p>
+              </div>
+            </div>
+            <div class="mlops-loop-item">
+              <div class="mlops-loop-num">2</div>
+              <div class="mlops-loop-text">
+                <h5>Data versioned + registered</h5>
+                <p>Lineage tracked from simulation params to dataset</p>
+              </div>
+            </div>
+            <div class="mlops-loop-item">
+              <div class="mlops-loop-num">3</div>
+              <div class="mlops-loop-text">
+                <h5>Training pipeline executes</h5>
+                <p>Adaptive sampling + hyperparam search + diagnostics</p>
+              </div>
+            </div>
+            <div class="mlops-loop-item">
+              <div class="mlops-loop-num">4</div>
+              <div class="mlops-loop-text">
+                <h5>Physics validation gates promotion</h5>
+                <p>PDE residuals, BC errors, R² all checked before deploy</p>
+              </div>
+            </div>
+            <div class="mlops-loop-item">
+              <div class="mlops-loop-num">5</div>
+              <div class="mlops-loop-text">
+                <h5>A/B test against production</h5>
+                <p>New model must outperform current on held-out physics queries</p>
+              </div>
+            </div>
+            <div class="mlops-loop-item">
+              <div class="mlops-loop-num">6</div>
+              <div class="mlops-loop-text">
+                <h5>Promoted — monitoring begins</h5>
+                <p>Drift detection active; loop restarts on degradation</p>
+              </div>
+            </div>
+          </div>
+          <div style="margin-top: 20px;">
+            <a href="#" class="btn-launch disabled" style="display: inline-flex; padding: 10px 24px; border-radius: 50px; font-size: 0.85rem;">Coming Soon</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== TECH STACK ===== -->
+  <section class="section section-alt">
+    <div class="container">
+      <div class="section-label">
+        <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        Tech Stack
+      </div>
+      <h2 class="section-title fade-in">Built With</h2>
+      <p class="section-subtitle fade-in">Every tool in the stack chosen for a specific reason in the PINN workflow.</p>
+
+      <div class="tech-grid fade-in">
+        <div class="tech-card">
+          <div class="tech-card-icon">🔥</div>
+          <div class="tech-card-name">PyTorch</div>
+          <div class="tech-card-role">Neural network training + PINN loss</div>
+        </div>
+        <div class="tech-card">
+          <div class="tech-card-icon">⚗️</div>
+          <div class="tech-card-name">FEniCSx</div>
+          <div class="tech-card-role">Ground-truth FEM data generation</div>
+        </div>
+        <div class="tech-card">
+          <div class="tech-card-icon">📐</div>
+          <div class="tech-card-name">DeepXDE</div>
+          <div class="tech-card-role">PINN framework for PDE solving</div>
+        </div>
+        <div class="tech-card">
+          <div class="tech-card-icon">🎯</div>
+          <div class="tech-card-name">Optuna</div>
+          <div class="tech-card-role">PINN hyperparameter optimisation</div>
+        </div>
+        <div class="tech-card">
+          <div class="tech-card-icon">📊</div>
+          <div class="tech-card-name">MLflow</div>
+          <div class="tech-card-role">Experiment tracking + model registry</div>
+        </div>
+        <div class="tech-card">
+          <div class="tech-card-icon">🚀</div>
+          <div class="tech-card-name">FastAPI</div>
+          <div class="tech-card-role">Production REST serving layer</div>
+        </div>
+        <div class="tech-card">
+          <div class="tech-card-icon">📱</div>
+          <div class="tech-card-name">Streamlit</div>
+          <div class="tech-card-role">Interactive tool UIs</div>
+        </div>
+        <div class="tech-card">
+          <div class="tech-card-icon">🔷</div>
+          <div class="tech-card-name">ONNX</div>
+          <div class="tech-card-role">Cross-platform model export</div>
+        </div>
+        <div class="tech-card">
+          <div class="tech-card-icon">🗄️</div>
+          <div class="tech-card-name">ChromaDB</div>
+          <div class="tech-card-role">Vector store for literature RAG</div>
+        </div>
+        <div class="tech-card">
+          <div class="tech-card-icon">🎨</div>
+          <div class="tech-card-name">PyVista</div>
+          <div class="tech-card-role">3D mesh + stress field visualisation</div>
+        </div>
+        <div class="tech-card">
+          <div class="tech-card-icon">🐳</div>
+          <div class="tech-card-name">Docker</div>
+          <div class="tech-card-role">FEniCSx container + VPS deployment</div>
+        </div>
+        <div class="tech-card">
+          <div class="tech-card-icon">🤖</div>
+          <div class="tech-card-name">LLM Agents</div>
+          <div class="tech-card-role">Physics formulation + autonomous loops</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="footer">
+    <div class="container">
+      <p class="footer-copy">&copy; 2026 Sachin Malusare — PINN Toolkit</p>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      'use strict';
+
+      // Navbar scroll
+      var navbar = document.querySelector('.navbar');
+      window.addEventListener('scroll', function () {
+        navbar.classList.toggle('scrolled', window.scrollY > 50);
+      }, { passive: true });
+
+      // Mobile menu
+      var hamburger = document.querySelector('.hamburger');
+      var navLinks = document.querySelector('.nav-links');
+      hamburger.addEventListener('click', function () {
+        hamburger.classList.toggle('active');
+        navLinks.classList.toggle('open');
+      });
+      navLinks.querySelectorAll('a').forEach(function (link) {
+        link.addEventListener('click', function () {
+          hamburger.classList.remove('active');
+          navLinks.classList.remove('open');
+        });
+      });
+      document.addEventListener('click', function (e) {
+        if (navLinks.classList.contains('open') && !navLinks.contains(e.target) && !hamburger.contains(e.target)) {
+          hamburger.classList.remove('active');
+          navLinks.classList.remove('open');
+        }
+      });
+
+      // Fade-in on scroll
+      var fadeEls = document.querySelectorAll('.fade-in');
+      if ('IntersectionObserver' in window) {
+        var observer = new IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('visible');
+              observer.unobserve(entry.target);
+            }
+          });
+        }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+        fadeEls.forEach(function (el) { observer.observe(el); });
+      } else {
+        fadeEls.forEach(function (el) { el.classList.add('visible'); });
+      }
+
+      // Smooth scroll
+      document.querySelectorAll('a[href^="#"]').forEach(function (anchor) {
+        anchor.addEventListener('click', function (e) {
+          var targetId = this.getAttribute('href');
+          if (targetId === '#') return;
+          var target = document.querySelector(targetId);
+          if (target) { e.preventDefault(); target.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

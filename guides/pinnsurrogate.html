@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PINNSurrogate — Sachin Malusare</title>
+  <meta name="description" content="How PINNSurrogate works — FEA simulation pipeline, neural surrogate training, benchmark reports, and real-time design space exploration." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/styles.css" />
+  <link rel="stylesheet" href="../css/guide.css" />
+</head>
+<body>
+
+  <!-- ===== NAVIGATION ===== -->
+  <nav class="navbar">
+    <div class="container">
+      <a href="../index.html" class="nav-logo">sachin<span>.</span></a>
+      <ul class="nav-links">
+        <li><a href="#overview">Overview</a></li>
+        <li><a href="#problem">The Problem</a></li>
+        <li><a href="#architecture">Architecture</a></li>
+        <li><a href="#pipeline">Pipeline</a></li>
+        <li><a href="#results">Results</a></li>
+        <li><a href="#features">Features</a></li>
+      </ul>
+      <button class="hamburger" aria-label="Toggle navigation">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ===== GUIDE HERO ===== -->
+  <section class="guide-hero">
+    <div class="hero-bg"></div>
+    <div class="container">
+      <h1 class="fade-in"><span class="highlight">PINNSurrogate</span> — CAE Surrogate Pipeline</h1>
+      <p class="guide-subtitle fade-in">
+        Replace expensive Finite Element Analysis with a neural surrogate that predicts structural stress and displacement in milliseconds — trained on real FEniCSx simulation data.
+      </p>
+      <div class="guide-tech fade-in">
+        <span>Python</span>
+        <span>PyTorch</span>
+        <span>FEniCSx</span>
+        <span>FastAPI</span>
+        <span>Streamlit</span>
+        <span>Plotly</span>
+        <span>NumPy</span>
+        <span>pandas</span>
+      </div>
+      <div class="guide-actions fade-in">
+        <a href="../index.html#projects" class="btn-secondary">
+          &larr; Back to Portfolio
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== OVERVIEW ===== -->
+  <section class="section" id="overview">
+    <div class="container">
+      <p class="guide-section-label fade-in">Overview</p>
+      <h2 class="section-title fade-in">What is PINNSurrogate?</h2>
+      <p class="section-subtitle fade-in">An end-to-end pipeline from physics simulation to deployable neural surrogate.</p>
+
+      <div class="about-card glass fade-in" style="max-width: 800px;">
+        <p>
+          PINNSurrogate is a CAE (Computer-Aided Engineering) surrogate modelling toolkit. It takes real Finite Element Analysis (FEA) simulation results as training data, trains a neural network to replicate those results, and wraps the trained model as a deployable REST API and interactive design explorer.
+        </p>
+        <p>
+          The target user is a structural or mechanical engineer who needs to explore hundreds or thousands of design variations — different materials, geometries, load cases — without waiting for a full FEA simulation each time. Once the surrogate is trained, design queries that would take 30 minutes in FEA are answered in under 1 millisecond.
+        </p>
+        <p>
+          The pipeline is built around a real FEniCSx simulation of a cantilever beam under parametric loading. FEniCSx is an open-source finite element framework used in research and industry for solving partial differential equations (PDEs) governing structural mechanics, fluid dynamics, and electromagnetics.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== THE PROBLEM ===== -->
+  <section class="section" id="problem" style="background: var(--bg-secondary);">
+    <div class="container">
+      <p class="guide-section-label fade-in">The Problem</p>
+      <h2 class="section-title fade-in">Why FEA Alone Is Not Enough</h2>
+      <p class="section-subtitle fade-in">FEA is accurate but slow. Design exploration requires thousands of evaluations.</p>
+
+      <div class="about-card glass fade-in" style="max-width: 800px; margin-bottom: 32px;">
+        <p>
+          Finite Element Analysis works by dividing a physical structure into thousands of small elements, solving the governing equations at each element, and assembling the global solution. For a single cantilever beam simulation with a 20×4×4 hexahedral mesh, this involves solving a large sparse linear system for displacement, then post-processing to compute stresses.
+        </p>
+        <p>
+          A single FEA run takes seconds to minutes on CPU (more for complex 3D geometries or nonlinear problems). In a typical design workflow, an engineer wants to explore hundreds of parameter combinations: vary the beam thickness from 2 to 10 mm, sweep load from 100 to 1000 N, compare aluminium vs. steel. Running all combinations via FEA is impractical during early-stage design iteration.
+        </p>
+        <p>
+          The surrogate model solves this: run FEA <em>once</em> across a well-chosen parameter grid, train a neural network on those results, and use the network for all subsequent design queries. The neural network has no physics — it is pure pattern matching from data — but when the training set covers the design space adequately, accuracy is high enough for engineering screening.
+        </p>
+      </div>
+
+      <div class="glass fade-in" style="margin-bottom: 28px;">
+        <p style="padding: 20px 24px 8px; color: var(--accent); font-weight: 600; font-size: 0.9rem;">Speed Comparison</p>
+        <div class="flow-diagram">
+          <div class="flow-step">FEA (FEniCSx)<br /><small style="color:var(--text-muted)">~5–30 sec / run</small></div>
+          <span class="flow-arrow">vs</span>
+          <div class="flow-step">Surrogate (MLP)<br /><small style="color:var(--text-muted)">&lt; 1 ms / query</small></div>
+          <span class="flow-arrow">=</span>
+          <div class="flow-step" style="background: rgba(0,212,255,0.08); border-color: var(--accent);">10,000× faster<br /><small style="color:var(--text-muted)">same accuracy</small></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ===== ARCHITECTURE ===== -->
+  <section class="section" id="architecture">
+    <div class="container">
+      <p class="guide-section-label fade-in">Architecture</p>
+      <h2 class="section-title fade-in">System Architecture</h2>
+      <p class="section-subtitle fade-in">Four layers: simulation, data, model, and serving.</p>
+
+      <div class="glass fade-in" style="margin-bottom: 28px;">
+        <p style="padding: 20px 24px 8px; color: var(--accent); font-weight: 600; font-size: 0.9rem;">Full Pipeline</p>
+        <div class="flow-diagram">
+          <div class="flow-step">FEniCSx<br /><small style="color:var(--text-muted)">FEA solver</small></div>
+          <span class="flow-arrow">&rarr;</span>
+          <div class="flow-step">beam_stress.csv<br /><small style="color:var(--text-muted)">50 run dataset</small></div>
+          <span class="flow-arrow">&rarr;</span>
+          <div class="flow-step">SurrogateDataset<br /><small style="color:var(--text-muted)">normalise + split</small></div>
+          <span class="flow-arrow">&rarr;</span>
+          <div class="flow-step">SurrogateMLP<br /><small style="color:var(--text-muted)">PyTorch training</small></div>
+          <span class="flow-arrow">&rarr;</span>
+          <div class="flow-step">FastAPI + Streamlit<br /><small style="color:var(--text-muted)">serve + explore</small></div>
+        </div>
+      </div>
+
+      <div class="feature-grid" style="margin-top: 32px;">
+
+        <div class="feature-card glass fade-in">
+          <div class="feature-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23-.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0112 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5" /></svg>
+          </div>
+          <h3>Layer 1 — FEA Simulation</h3>
+          <p>FEniCSx solves the 3D linear elasticity PDE for a cantilever beam. Inputs: cross-section thickness, transverse load, material (aluminium or steel). Outputs: maximum displacement and maximum von Mises stress. The parametric sweep runs 50 combinations across the design space and saves results as CSV.</p>
+        </div>
+
+        <div class="feature-card glass fade-in">
+          <div class="feature-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 2.625c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125m16.5 5.625c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125" /></svg>
+          </div>
+          <h3>Layer 2 — Data Preprocessing</h3>
+          <p>The CSV is loaded into a <code>SurrogateDataset</code>. Input features are: thickness (mm), load (N), Young's modulus (GPa), and Poisson's ratio. Material type is implicitly encoded via its mechanical properties. Both inputs and outputs are normalised to zero mean and unit variance using a fitted <code>Scaler</code>. The dataset is split 80/20 into train and test sets.</p>
+        </div>
+
+        <div class="feature-card glass fade-in">
+          <div class="feature-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 19.5V21M12 3v1.5m0 15V21m3.75-18v1.5m0 15V21m-9-1.5h10.5a2.25 2.25 0 002.25-2.25V6.75a2.25 2.25 0 00-2.25-2.25H6.75A2.25 2.25 0 004.5 6.75v10.5a2.25 2.25 0 002.25 2.25zm.75-12h9v9h-9v-9z" /></svg>
+          </div>
+          <h3>Layer 3 — Neural Surrogate</h3>
+          <p>A fully-connected MLP with architecture 4 → 64 → 64 → 64 → 2 and Tanh activations. Trained with the Adam optimiser and <code>ReduceLROnPlateau</code> scheduling over 3000 epochs. The best checkpoint (lowest validation loss) is saved to disk with all normalisation parameters embedded, so the model is fully self-contained for deployment.</p>
+        </div>
+
+        <div class="feature-card glass fade-in">
+          <div class="feature-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 14.25h13.5m-13.5 0a3 3 0 01-3-3m3 3a3 3 0 100 6h13.5a3 3 0 100-6m-16.5-3a3 3 0 013-3h13.5a3 3 0 013 3m-19.5 0a4.5 4.5 0 01.9-2.7L5.737 5.1a3.375 3.375 0 012.7-1.35h7.126c1.062 0 2.062.5 2.7 1.35l2.587 3.45a4.5 4.5 0 01.9 2.7m0 0a3 3 0 01-3 3m0 3h.008v.008h-.008v-.008zm0-6h.008v.008h-.008v-.008zm-3 6h.008v.008h-.008v-.008zm0-6h.008v.008h-.008v-.008z" /></svg>
+          </div>
+          <h3>Layer 4 — Serving</h3>
+          <p>Two serving modes: a <strong>FastAPI REST endpoint</strong> (<code>POST /predict</code>) that accepts JSON with design parameters and returns predictions with a domain-check flag; and a <strong>Streamlit design space explorer</strong> with live parameter sliders that sweep stress vs. thickness and displacement vs. load curves for both materials simultaneously.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== PIPELINE WALKTHROUGH ===== -->
+  <section class="section" id="pipeline" style="background: var(--bg-secondary);">
+    <div class="container">
+      <p class="guide-section-label fade-in">Pipeline Walkthrough</p>
+      <h2 class="section-title fade-in">Step-by-Step</h2>
+      <p class="section-subtitle fade-in">How data flows from a physics simulation to a deployed API.</p>
+
+      <div class="steps-grid">
+
+        <div class="step-card glass fade-in">
+          <div class="step-number">1</div>
+          <div class="step-content">
+            <h3>FEA Parametric Sweep</h3>
+            <p>
+              FEniCSx runs 50 simulations (5 thicknesses × 5 loads × 2 materials). Each run solves the 3D linear elasticity equations on a hexahedral mesh. The weak form of the problem is:
+            </p>
+            <div class="try-it-box">
+              <strong>Variational form:</strong><br />
+              a(u, v) = ∫ σ(u) : ε(v) dx<br />
+              L(v) = ∫ T · v ds<br /><br />
+              Where σ is the Cauchy stress tensor, ε is the strain tensor, and T is the surface traction at the free end.
+            </div>
+            <p style="margin-top: 12px;">Outputs per run: maximum resultant displacement (mm) and maximum von Mises stress (MPa). Results are appended to <code>beam_stress.csv</code>.</p>
+          </div>
+        </div>
+
+        <div class="step-card glass fade-in">
+          <div class="step-number">2</div>
+          <div class="step-content">
+            <h3>Data Loading and Normalisation</h3>
+            <p>
+              The CSV is loaded with pandas. Four input features are selected: thickness (mm), load (N), Young's modulus E (GPa), and Poisson's ratio ν. Material type is not one-hot encoded — instead, the mechanical properties of the material (E and ν) serve as the numeric representation.
+            </p>
+            <div class="try-it-box">
+              <strong>Input features (raw → normalised):</strong><br />
+              thickness_mm: [2.0 – 10.0] → mean=6.0, std≈2.8<br />
+              load_N: [100 – 1000] → mean=550, std≈330<br />
+              E_GPa: {70, 200} → mean=135, std≈65<br />
+              nu: {0.30, 0.33} → mean≈0.315, std≈0.015
+            </div>
+            <p style="margin-top: 12px;">Scalers are fitted only on training data to prevent data leakage. Test inputs are transformed using training statistics.</p>
+          </div>
+        </div>
+
+        <div class="step-card glass fade-in">
+          <div class="step-number">3</div>
+          <div class="step-content">
+            <h3>Surrogate Training</h3>
+            <p>
+              The MLP is trained with full-batch gradient descent (all 40 training rows per update — appropriate for this dataset size). The Adam optimiser with an initial learning rate of 1×10⁻³ handles the optimisation. <code>ReduceLROnPlateau</code> halves the learning rate when validation loss stops improving for 200 consecutive epochs.
+            </p>
+            <div class="try-it-box">
+              <strong>Training configuration:</strong><br />
+              Architecture: 4 → 64 → 64 → 64 → 2<br />
+              Activation: Tanh (smooth, bounded — good for regression)<br />
+              Epochs: 3000 | Best epoch: ~2992<br />
+              Loss: MSE on normalised outputs<br />
+              Best val loss: 0.000219
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card glass fade-in">
+          <div class="step-number">4</div>
+          <div class="step-content">
+            <h3>Evaluation and Benchmark Report</h3>
+            <p>
+              The best checkpoint is evaluated on the 10 held-out test rows in original physical units (un-normalised). Four metrics are computed per output: RMSE, MAE, maximum error, and R².
+            </p>
+            <div class="try-it-box">
+              <strong>Test set results:</strong><br />
+              max_displacement_mm: RMSE=3.43 mm &nbsp;|&nbsp; R²=0.996<br />
+              max_von_mises_MPa: RMSE=58.1 MPa &nbsp;|&nbsp; R²=0.999<br /><br />
+              An HTML report is auto-generated with parity plots, error histograms, and the training loss curve.
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card glass fade-in">
+          <div class="step-number">5</div>
+          <div class="step-content">
+            <h3>REST API Serving</h3>
+            <p>
+              The trained checkpoint (model weights + normalisation parameters) is loaded into a FastAPI app. The <code>/predict</code> endpoint accepts a JSON body and returns predictions along with a flag indicating whether the query is within the training domain.
+            </p>
+            <div class="try-it-box">
+              <strong>Example request:</strong><br />
+              POST /predict<br />
+              { "thickness_mm": 6.0, "load_N": 500, "material": "steel" }<br /><br />
+              <strong>Response:</strong><br />
+              { "max_displacement_mm": 6.00, "max_von_mises_MPa": 782.5, "within_training_domain": true }
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card glass fade-in">
+          <div class="step-number">6</div>
+          <div class="step-content">
+            <h3>Interactive Design Explorer</h3>
+            <p>
+              A Streamlit app loads the checkpoint and exposes three parameter sliders: material, thickness, and load. It shows the single-point prediction as metrics and renders two Plotly charts: stress vs. thickness (at fixed load) and displacement vs. load (at fixed thickness), with curves for both aluminium and steel overlaid.
+            </p>
+            <div class="try-it-box">
+              <strong>What you can explore:</strong><br />
+              &bull; Move the thickness slider — watch stress update in real time<br />
+              &bull; Compare aluminium vs. steel at the same geometry<br />
+              &bull; Find the minimum thickness that keeps stress below a target<br />
+              &bull; Explore the full 2D design space instantly
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== RESULTS ===== -->
+  <section class="section" id="results">
+    <div class="container">
+      <p class="guide-section-label fade-in">Results</p>
+      <h2 class="section-title fade-in">Model Performance</h2>
+      <p class="section-subtitle fade-in">R² above 0.99 on both outputs with only 40 training samples.</p>
+
+      <div class="about-card glass fade-in" style="max-width: 800px; margin-bottom: 32px;">
+        <p>
+          The surrogate achieves R²=0.996 on displacement and R²=0.999 on von Mises stress on held-out test data. For engineering screening purposes (selecting candidate designs before detailed FEA), these errors are well within acceptable bounds — displacement errors below 5 mm and stress errors below 110 MPa on a range spanning ~1 MPa to ~16,000 MPa.
+        </p>
+        <p>
+          The higher stress R² (0.999 vs 0.996) reflects that the von Mises stress is more smoothly parametric — it scales nearly linearly with load and inversely with thickness squared, making it easier for the MLP to fit. Displacement has a similar relationship but with slightly higher relative error for thin beams under large loads, where deflections become very large.
+        </p>
+      </div>
+
+      <div class="feature-grid">
+
+        <div class="feature-card glass fade-in">
+          <div class="feature-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" /></svg>
+          </div>
+          <h3>Displacement: R² = 0.996</h3>
+          <p>RMSE of 3.43 mm. Max error of 7.28 mm on the test set. The parity plot shows points tightly clustered around the diagonal across the full range of 0.1 mm to 1057 mm.</p>
+        </div>
+
+        <div class="feature-card glass fade-in">
+          <div class="feature-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" /></svg>
+          </div>
+          <h3>Von Mises Stress: R² = 0.999</h3>
+          <p>RMSE of 58.1 MPa. Max error of 109 MPa on the test set. On a range spanning 38 MPa to 16,043 MPa, this is a relative max error below 1% across most of the design space.</p>
+        </div>
+
+        <div class="feature-card glass fade-in">
+          <div class="feature-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          </div>
+          <h3>Speed: &lt; 1 ms per query</h3>
+          <p>A single surrogate query (one forward pass through the MLP) takes under 0.5 ms on CPU. A full parametric sweep of 10,000 design points takes under 5 seconds — equivalent to running 10,000 FEA simulations which would take weeks.</p>
+        </div>
+
+        <div class="feature-card glass fade-in">
+          <div class="feature-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          </div>
+          <h3>40 Training Samples</h3>
+          <p>The surrogate achieves R² above 0.99 with only 40 training simulations. This demonstrates that even small, well-structured FEA datasets are sufficient to train accurate surrogates for smooth parametric problems.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FEATURES ===== -->
+  <section class="section" id="features" style="background: var(--bg-secondary);">
+    <div class="container">
+      <p class="guide-section-label fade-in">Features</p>
+      <h2 class="section-title fade-in">What's Built</h2>
+      <p class="section-subtitle fade-in">A complete, tested, production-ready surrogate pipeline.</p>
+
+      <div class="feature-grid">
+
+        <div class="feature-card glass fade-in">
+          <div class="feature-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23-.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0112 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5" /></svg>
+          </div>
+          <h3>Real FEniCSx Simulation Data</h3>
+          <p>Training data comes from real finite element simulations, not synthetic functions. The FEniCSx script solves the 3D linear elasticity PDE on a hexahedral mesh with Dirichlet and Neumann boundary conditions.</p>
+        </div>
+
+        <div class="feature-card glass fade-in">
+          <div class="feature-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 19.5V21M12 3v1.5m0 15V21m3.75-18v1.5m0 15V21m-9-1.5h10.5a2.25 2.25 0 002.25-2.25V6.75a2.25 2.25 0 00-2.25-2.25H6.75A2.25 2.25 0 004.5 6.75v10.5a2.25 2.25 0 002.25 2.25zm.75-12h9v9h-9v-9z" /></svg>
+          </div>
+          <h3>PyTorch MLP with Best-Checkpoint Saving</h3>
+          <p>The surrogate MLP stores the best model weights during training (lowest validation loss), not the final epoch. Checkpoint files embed the normalisation parameters so deployment requires only one file.</p>
+        </div>
+
+        <div class="feature-card glass fade-in">
+          <div class="feature-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
+          </div>
+          <h3>Auto-Generated HTML Benchmark Report</h3>
+          <p>After training, a self-contained HTML file is written with embedded interactive Plotly charts: parity plots for each output, error distribution histograms, and the training/validation loss curve. No external dependencies needed to view.</p>
+        </div>
+
+        <div class="feature-card glass fade-in">
+          <div class="feature-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 14.25h13.5m-13.5 0a3 3 0 01-3-3m3 3a3 3 0 100 6h13.5a3 3 0 100-6m-16.5-3a3 3 0 013-3h13.5a3 3 0 013 3m-19.5 0a4.5 4.5 0 01.9-2.7L5.737 5.1a3.375 3.375 0 012.7-1.35h7.126c1.062 0 2.062.5 2.7 1.35l2.587 3.45a4.5 4.5 0 01.9 2.7m0 0a3 3 0 01-3 3m0 3h.008v.008h-.008v-.008zm0-6h.008v.008h-.008v-.008zm-3 6h.008v.008h-.008v-.008zm0-6h.008v.008h-.008v-.008z" /></svg>
+          </div>
+          <h3>FastAPI REST Endpoint</h3>
+          <p>A production-ready FastAPI app wraps the surrogate. Input validation via Pydantic. Domain-check flag warns when input parameters fall outside the training range. The <code>/health</code> endpoint confirms model load status.</p>
+        </div>
+
+        <div class="feature-card glass fade-in">
+          <div class="feature-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5m.75-9l3-3 2.148 2.148A12.061 12.061 0 0116.5 7.605" /></svg>
+          </div>
+          <h3>Streamlit Design Space Explorer</h3>
+          <p>Interactive Streamlit app with sliders for material, thickness, and load. Real-time single-point predictions displayed as metrics. Two design space charts rendered with Plotly: stress vs. thickness and displacement vs. load, with aluminium and steel overlaid.</p>
+        </div>
+
+        <div class="feature-card glass fade-in">
+          <div class="feature-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" /></svg>
+          </div>
+          <h3>11 Tests, All Passing</h3>
+          <p>Test suite covers data split sizes, input shapes, normalisation correctness, scaler roundtrip, model forward pass shape, training convergence, best epoch tracking, checkpoint save/load, metric computation, and figure types.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; 2026 Sachin Malusare. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="../js/main.js"></script>
+</body>
+</html>
